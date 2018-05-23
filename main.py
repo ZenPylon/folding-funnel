@@ -1,4 +1,5 @@
 from Bio.PDB import *
+from math import pi
 
 # BioPython setup
 parser = PDBParser()
@@ -43,5 +44,29 @@ torsion_angles = polypeptide.get_phi_psi_list()
 for atom in residue_list[0].get_atoms():
     print(atom.get_coord())
     print(atom.get_vector())
+residue = residue_list[0]
 
+# From Biopython FAQ
+nitro = residue['N'].get_vector()
+carbon = residue['C'].get_vector()
+carbon_a = residue['CA'].get_vector()
+
+# center at origin
+nitro = nitro - carbon_a
+carbon = carbon - carbon_a
+
+# find rotation matrix that rotates n -120 degrees along the ca-c vector
+rot = rotaxis(-pi * 120.0/180.0, carbon)
+
+# apply rotation to ca-n vector
+cb_at_origin = nitro.left_multiply(rot)
+
+# put on top of ca atom
+cb = cb_at_origin + carbon_a
+
+print(f'rotated {cb}')
+
+for atom in residue_list[0].get_atoms():
+    print(atom.get_coord())
+    print(atom.get_vector())
 
