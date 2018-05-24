@@ -14,44 +14,48 @@ def remove_hetero(model, chain):
     [chain.detach_child(hetero_id) for hetero_id in hetero_residue_ids]
 
     # Update residues after removing hetero residue
-    residues = structure.get_residues()
+    residues = chain.get_residues()
     residue_list = [res for res in residues]
     print(f'Chain now has {len(residue_list)} residues')
     return residue_list
 
+def main_load(model_name, filename):
+    """
+    Loads a pdb file and ensures it has one model and chain.
+    Returns structure, chain, and polypeptide.
 
-# BioPython setup
-parser = PDBParser()
-ppb = PPBuilder()
+    This function will likely change
+    """
+    parser = PDBParser()
+    ppb = PPBuilder()
 
-# Load PDB file and verify we're working with one model and one chain
-structure = parser.get_structure('ubiq', '1ubq.pdb')
-models = [model for model in structure.get_models()]
-chains = [model for model in structure.get_chains()]
-if len(models) != 1 or len(chains) != 1:
-    print('ERROR: Only PDBs with one model and one chain are currently supported!\nExiting...')
-    exit()
+    # Load PDB file and verify we're working with one model and one chain
+    structure = parser.get_structure(model_name, filename)
+    models = [model for model in structure.get_models()]
+    chains = [model for model in structure.get_chains()]
+    if len(models) != 1 or len(chains) != 1:
+        print('ERROR: Only PDBs with one model and one chain are currently supported!\nExiting...')
+        exit()
 
-# Remove hetero residues (such as solvent)
-model = models[0]
-chain = chains[0]
-residue_list = remove_hetero(model, chain)
-print(len(residue_list))
+    # Remove hetero residues (such as solvent)
+    model = models[0]
+    chain = chains[0]
+    residue_list = remove_hetero(model, chain)
+    print(len(residue_list))
+
+    # Build a polypeptide from our structure and get the torsion angles
+    polypeptides = ppb.build_peptides(structure)
+    if len(polypeptides) != 1:
+        print(f'ERROR: expected only one polypeptide from PDB structure')
+        exit()
+
+    polypeptide = polypeptides[0]
+
+    return structure, residue_list, polypeptide
 
 
-# Build a polypeptide from our structure and get the torsion angles
-polypeptides = ppb.build_peptides(structure)
-if len(polypeptides) != 1:
-    print(f'ERROR: expected only one polypeptide from PDB structure')
-    exit()
-
-polypeptide = polypeptides[0]
+structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
-
-for atom in residue_list[0].get_atoms():
-    print(atom.get_coord())
-    print(atom.get_vector())
-residue = residue_list[0]
 
 # # From Biopython FAQ
 # nitro = residue['N'].get_vector()
