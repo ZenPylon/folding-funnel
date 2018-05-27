@@ -23,6 +23,9 @@ def test_coords_equal():
         atom not in backbone and print(f'{atom} not in backbone')
         atom in backbone and print(f'\t\t{atom} in backbone')
 
+    # phi is nitro to carbon_alpha
+    # psi is carbon c_alpha to c
+
     # center at origin
     nitro_pos = nitro_pos - carbon_a_pos
     carbon_pos = carbon_pos - carbon_a_pos

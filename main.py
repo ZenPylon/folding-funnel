@@ -57,27 +57,16 @@ def main_load(model_name, filename):
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
 
-# # From Biopython FAQ
-# nitro = residue['N'].get_vector()
-# carbon = residue['C'].get_vector()
-# carbon_a = residue['CA'].get_vector()
-
-# # center at origin
-# nitro = nitro - carbon_a
-# carbon = carbon - carbon_a
-
-# # find rotation matrix that rotates n -120 degrees along the ca-c vector
-# rot = rotaxis(-pi * 120.0/180.0, carbon)
-
-# # apply rotation to ca-n vector
-# cb_at_origin = nitro.left_multiply(rot)
-
-# # put on top of ca atom
-# cb = cb_at_origin + carbon_a
-
-# print(f'rotated {cb}')
-
-# for atom in residue_list[0].get_atoms():
-#     print(atom.get_coord())
-#     print(atom.get_vector())
-
+# TODO:
+# 1. Specify all phi / psi angle deltas (magnitude M) relative to native structure
+#    and get absolute phi / psi coordinates (calculate native angles + deltas).
+# 2. Convert from angle-space to cartesian coordinates.
+# 3. Pass coordinates to OpenMM (how?).
+# 4. Add solvent to model with OpenMM.
+# 5. Run energy minimization on model.
+# 6. Pass final energy value and coordinates to BioPython, and reset atom coords.
+# 7. Recalculate phi / psi angles from coordinates.
+# 8. Calculate distance in angle-space from starting point (in this case,
+#    native structure) and calculate delta in energy level.
+# 9. Output distance and energy-delta to file (i.e track progress).
+# 9. Repeat steps 1-8, increasing delta magnitude M each time.
