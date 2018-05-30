@@ -17,11 +17,11 @@ def test_coords_equal():
     nitro_pos = res['N'].get_vector()
     carbon_pos = res['C'].get_vector()
     carbon_a_pos = res['CA'].get_vector()
-    backbone = [res['N'], res['C'], res['CA']]
-
-    for atom in res.get_atoms():
-        atom not in backbone and print(f'{atom} not in backbone')
-        atom in backbone and print(f'\t\t{atom} in backbone')
+    
+    # Get all atoms in the side-chain (i.e. those not in the backbone)
+    backbone = [res['N'], res['C'], res['CA'], res['O']]
+    sidechain = [atom for atom in res.get_atoms() if atom not in backbone]
+    print(sidechain)
 
     # phi is nitro to carbon_alpha
     # psi is carbon c_alpha to c
