@@ -1,4 +1,5 @@
 from Bio.PDB import *
+from simtk.openmm.app import PDBFile
 from math import pi
 
 def remove_hetero(model, chain):
@@ -54,10 +55,25 @@ def main_load(model_name, filename):
     return structure, residue_list, polypeptide
 
 
+pdb = PDBFile('1ubq.pdb')
+pdb.topology
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
 
-# TODO:
+# TODO
+# Try to use ChemCoords to convert between coordinates and bonds 
+# (given by pdb positions and topology).  Verify that
+# 1. Transforming between internal and cartesian stays the same when 
+#    no modifications are made
+# 2. Modifying the angle of a residue halfway through the chain only modifies 
+#    coordinates on that residue or after (no residues before).
+
+# If ChemCoords is unworkable, just construct the backbone iteratively through 
+# local spherical coordinate --> cartersian coordinate geometry, and keep the side
+# chains in the same relative position (relative to the alpha carbon).
+
+# TODO: The Algorithm:
+# 
 # 1. Specify all phi / psi angle deltas (magnitude M) relative to native structure
 #    and get absolute phi / psi coordinates (calculate native angles + deltas).
 # 2. Convert from angle-space to cartesian coordinates.
@@ -69,4 +85,4 @@ torsion_angles = polypeptide.get_phi_psi_list()
 # 8. Calculate distance in angle-space from starting point (in this case,
 #    native structure) and calculate delta in energy level.
 # 9. Output distance and energy-delta to file (i.e track progress).
-# 9. Repeat steps 1-8, increasing delta magnitude M each time.
+# 10. Repeat steps 1-9, increasing delta magnitude M each time.

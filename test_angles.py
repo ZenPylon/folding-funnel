@@ -23,9 +23,6 @@ def test_coords_equal():
     sidechain = [atom for atom in res.get_atoms() if atom not in backbone]
     print(sidechain)
 
-    # phi is nitro to carbon_alpha
-    # psi is carbon c_alpha to c
-
     # center at origin
     nitro_pos = nitro_pos - carbon_a_pos
     carbon_pos = carbon_pos - carbon_a_pos

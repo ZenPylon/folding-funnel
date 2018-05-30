@@ -4,7 +4,7 @@ from simtk.unit import *
 from sys import stdout
 import json
 
-pdb = PDBFile('villin.pdb')
+pdb = PDBFile('1ubq.pdb')
 forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
 # modeller.addSolvent(forcefield, padding=1.0*nanometers)
 
