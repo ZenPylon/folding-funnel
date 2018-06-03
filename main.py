@@ -1,6 +1,8 @@
 from Bio.PDB import *
 from simtk.openmm.app import PDBFile
 from math import pi
+import chemcoord as cc
+import pandas as pd
 
 def remove_hetero(model, chain):
     """Remove heteroatoms from a chain and return the new residue_list"""
@@ -55,11 +57,17 @@ def main_load(model_name, filename):
     return structure, residue_list, polypeptide
 
 
-pdb = PDBFile('1ubq.pdb')
-pdb.topology
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
 
+# Test to see if OpenMM bonds are the same as chemcoord
+
+# Construct pandas dataframe out of structure positions (xyz)
+atom_coords = [atom.get_coord() for atom in structure.get_atoms()]
+atom_names = [atom.get_name() for atom in structure.get_atoms()]
+cartesian = cc.Cartesian(atoms=atom_names, coords=atom_coords)
+
+print(cartesian)
 # TODO
 # Try to use ChemCoords to convert between coordinates and bonds 
 # (given by pdb positions and topology).  Verify that
