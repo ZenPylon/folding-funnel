@@ -4,20 +4,29 @@ from simtk.unit import *
 from sys import stdout
 import json
 
-pdb = PDBFile('1ubq.pdb')
+pdb = PDBFile('villin.pdb')
 forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-# modeller.addSolvent(forcefield, padding=1.0*nanometers)
+modeller = Modeller(pdb.topology, pdb.positions)
+modeller.addHydrogens(forcefield)
 
-system = forcefield.createSystem(pdb.topology, nonbondedMethod=PME, nonbondedCutoff=1*nanometer, constraints=HBonds)
+system = forcefield.createSystem(modeller.topology, nonbondedMethod=PME, nonbondedCutoff=1*nanometer, constraints=HBonds)
 integrator = LangevinIntegrator(300*kelvin, 1/picosecond, 0.002*picoseconds)
-simulation = Simulation(pdb.topology, system, integrator)
-simulation.context.setPositions(pdb.positions)
-print(pdb.topology)
+simulation = Simulation(modeller.topology, system, integrator)
+simulation.context.setPositions(modeller.positions)
+print(modeller.topology)
 
-bonds = pdb.topology.bonds()
+bonds = modeller.topology.bonds()
 
-for bond in bonds:
-    print(bond)
+# Get all bonds between atoms in the same residue and the polypeptide bond
+# between alpha carbons and the next nitrogen
+# for bond in bonds:
+#     inner_bond = bond[0].residue.index == bond[1].residue.index
+#     peptide_bond = 
+#     if inner_bond :
+#     print(bond)
+
+
+
 # simulation.minimizeEnergy(maxIterations=100)
 # state = simulation.context.getState(getEnergy=True)
 # print(state.getPotentialEnergy())
