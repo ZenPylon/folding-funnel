@@ -60,14 +60,18 @@ def main_load(model_name, filename):
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
 
-# Test to see if OpenMM bonds are the same as chemcoord
+# Chemcoords.get_bonds() result looks different than 
 
 # Construct pandas dataframe out of structure positions (xyz)
+print('getting atom coords')
 atom_coords = [atom.get_coord() for atom in structure.get_atoms()]
 atom_names = [atom.get_name() for atom in structure.get_atoms()]
+console.log('creating cartesian')
 cartesian = cc.Cartesian(atoms=atom_names, coords=atom_coords)
+console.log('getting zmat')
+zmat = cartesian.get_zmat()
+print(zmat)
 
-print(cartesian)
 # TODO
 # Try to use ChemCoords to convert between coordinates and bonds 
 # (given by pdb positions and topology).  Verify that
@@ -86,6 +90,7 @@ print(cartesian)
 #    and get absolute phi / psi coordinates (calculate native angles + deltas).
 # 2. Convert from angle-space to cartesian coordinates.
 # 3. Pass coordinates to OpenMM (how?).
+    # Use topology.addChain, topology.addResidue(), etc based on constructed structure
 # 4. Add solvent to model with OpenMM.
 # 5. Run energy minimization on model.
 # 6. Pass final energy value and coordinates to BioPython, and reset atom coords.
