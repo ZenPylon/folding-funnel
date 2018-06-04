@@ -63,12 +63,9 @@ torsion_angles = polypeptide.get_phi_psi_list()
 # Chemcoords.get_bonds() result looks different than 
 
 # Construct pandas dataframe out of structure positions (xyz)
-print('getting atom coords')
 atom_coords = [atom.get_coord() for atom in structure.get_atoms()]
 atom_names = [atom.get_name() for atom in structure.get_atoms()]
-console.log('creating cartesian')
 cartesian = cc.Cartesian(atoms=atom_names, coords=atom_coords)
-console.log('getting zmat')
 zmat = cartesian.get_zmat()
 print(zmat)
 
