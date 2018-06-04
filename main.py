@@ -11,17 +11,24 @@ def remove_hetero(model, chain):
     for res in residue_list:
         if res.id[0] != ' ':
             hetero_residue_ids.append(res.id)
-
+    
     print(f'Number of residues in chain: {len(residue_list)}')
     print(f'Removing {len(hetero_residue_ids)} hetero residues')
-    [chain.detach_child(hetero_id) for hetero_id in hetero_residue_ids]
+    for hetero_id in hetero_residue_ids:
+        chain.detach_child(hetero_id)
 
-    # Update residues after removing hetero residue
-    residues = chain.get_residues()
-    residue_list = [res for res in residues]
-    print(f'Chain now has {len(residue_list)} residues')
-    return residue_list
+def remove_hydrogens(model, chain):
+    """Remove hydrogens from a chain and return the new residue_list"""
+    hydrogen_count = 0
+    for res in chain.get_residues():
+        hydrogens = [atom.get_name() for atom in res.get_atoms() if atom.element == 'H']
+        print(f'Hydrogens {hydrogens}')
+        for hydrogen in hydrogens:
+            res.detach_child(hydrogen) 
+        hydrogen_count += len(hydrogens)
 
+    print(f'Removed {hydrogen_count} hydrogen atoms')
+        
 def main_load(model_name, filename):
     """
     Loads a pdb file and ensures it has one model and chain.
@@ -43,8 +50,11 @@ def main_load(model_name, filename):
     # Remove hetero residues (such as solvent)
     model = models[0]
     chain = chains[0]
-    residue_list = remove_hetero(model, chain)
-    print(len(residue_list))
+    remove_hetero(model, chain)
+    remove_hydrogens(model, chain)
+    residues = chain.get_residues()
+    residue_list = [res for res in residues]
+    print(f'Chain now has {len(residue_list)} residues')
 
     # Build a polypeptide from our structure and get the torsion angles
     polypeptides = ppb.build_peptides(structure)
@@ -57,11 +67,12 @@ def main_load(model_name, filename):
     return structure, residue_list, polypeptide
 
 
-
-structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
+# Don't worry about hydrogen atoms - we'll add them to the PDB model later
+structure, residue_list, polypeptide = main_load('ubiq', 'villin.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
-atom_coords = [atom.get_coord() for atom in structure.get_atoms()]
-atom_names = [atom.get_name() for atom in structure.get_atoms()]
+for res in residue_list:
+    res.get_atoms()
+
 
 # Construct backbone from angles and distances
 
