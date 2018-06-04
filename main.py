@@ -57,17 +57,32 @@ def main_load(model_name, filename):
     return structure, residue_list, polypeptide
 
 
+
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
-
-# Chemcoords.get_bonds() result looks different than 
-
-# Construct pandas dataframe out of structure positions (xyz)
 atom_coords = [atom.get_coord() for atom in structure.get_atoms()]
 atom_names = [atom.get_name() for atom in structure.get_atoms()]
-cartesian = cc.Cartesian(atoms=atom_names, coords=atom_coords)
-zmat = cartesian.get_zmat()
-print(zmat)
+
+# Construct backbone from angles and distances
+
+# 1. Get torsion angles and bond distances for backbone molecules
+# 1. Get vectors for sidechain atoms relative to backbone atom
+# 1. Iterate through each residue and construct each backbone atom 
+#    relative to transformed bond angle (use spherical coordinates)
+
+
+# THEN
+# 1. Save PDB with minor alterations
+# 1. Calculate RMSD.  Should be small
+# 1. Plot superimposed or side-by-side structures.  Get visual confirmation
+# of similarity
+
+# THEN:
+# 1. Make increasingly large deviations from loaded structure
+# 1. Calculate RMSD
+# 1. Plot Angle distance vs RMSD.  Should be positive correlation
+
+
 
 # TODO
 # Try to use ChemCoords to convert between coordinates and bonds 
