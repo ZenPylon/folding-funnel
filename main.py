@@ -74,42 +74,44 @@ res_count = len(polypeptide)
 
 # Algorithm taken from Practical Conversion from Torsion Space to Cartesian
 # Space for In Silico Protein Synthesis
+
+# TODO - refactor logic into function, then apply function to every string of 4 atoms
+# TODO - test by comparing coordinates of original with constructed coordinates
+#        (without modifying the coordinates)
+# TODO - test by changing angles more and more, and plot vs. RMSD distance
+#        Expectation is that it RMSD should increase as angle distance increases
+
 for i in range(0, 1):
     res = polypeptide[i]
     next_res = polypeptide[i + 1]
 
-    # try:
-    a = res['N'].get_vector()
-    b = res['CA'].get_vector()
-    c = res['C'].get_vector()
-    d = next_res['N'].get_vector()
-    bc = c - b
-    ab = b - a
-    bc_normed = bc.normalized()
-    
-    # Start at c, and move along the bc vector (amount: length of bond bc)
-    length_cd = (d - c).norm()
-    d0 = bc_normed ** length_cd
+    try:
+        a = res['N'].get_vector()
+        b = res['CA'].get_vector()
+        c = res['C'].get_vector()
+        d = next_res['N'].get_vector()
+        bc = c - b
+        ab = b - a
+        bc_normed = bc.normalized()
+        
+        # Start at c, and move along the bc vector (amount: length of bond bc)
+        length_cd = (d - c).norm()
+        d0 = bc_normed ** length_cd
 
-    # Rotate to d1
-    n = (ab ** bc_normed).normalized()
-    bond_angle = calc_angle(b, c, d0)
-    bond_rot = rotaxis(bond_angle, n)
-    d1 = d0.left_multiply(bond_rot)
+        # Rotate to d1
+        n = (ab ** bc_normed).normalized()
+        bond_angle = calc_angle(b, c, d0)
+        bond_rot = rotaxis(bond_angle, n)
+        d1 = d0.left_multiply(bond_rot)
 
-    torsion_angle = calc_dihedral(a, b, c, d)
-    torsion_rot = rotaxis(torsion_angle, bc_normed)
-    d2 = d1.left_multiply(torsion_rot)
-    print(f'd2 before adding c {d2}')
-    d2 = c + d2
-    print(f'final d2 {d2}')
+        # Rotate around bc vector based on dihedral angle
+        torsion_angle = calc_dihedral(a, b, c, d)
+        torsion_rot = rotaxis(torsion_angle, bc_normed)
+        d2 = c + d1.left_multiply(torsion_rot)
 
-
-
-    #     # backbone_vectors.append((ca - n, c - ca))
-    # except:
-    #     print('ERROR: missing backbone atoms\nExiting...')
-    #     exit()
+    except:
+        print('ERROR: missing backbone atoms\nExiting...')
+        exit()
 
 print(backbone_vectors)
 # Construct backbone from angles and distances
