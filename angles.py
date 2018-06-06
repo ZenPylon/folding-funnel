@@ -32,23 +32,29 @@ def rot_atom(angle: float, atoms: tuple):
 
 def rot_backbone(angles: list, polypeptide: polypeptide):
     """
-    Rotates each polypeptide backbone atom defined by a torsion angle.
+    Rotates each polypeptide backbone atom defined by a set of torsion angles
+    Returns the newly constructed polypeptide (does not modify polypeptide param).
+
     Args:
-        angles (list): the angles to modify each atom.  There should be a total of
-            3 * num_residues - 3 elements in the list.  The first three atoms ac
-        polypeptide (list) 
-    
-    for i in range(0, 1):
+        angles (list): the angles to modify each atom.  There should be a total of num_residues - 2 angles
+        polypeptide (list): the polypeptide to operate on
+    """
+    # TODO get the first n, ca, c, n bond here
+
+    for i in range(1, len(polypeptide - 1)):
+        # TODO construct the new polypeptide
         res = polypeptide[i]
         next_res = polypeptide[i + 1]
+        a = res['N'].get_vector()
+        b = res['CA'].get_vector(),
+        c = res['C'].get_vector()
+        d = next_res['N'].get_vector()
+        e = next_res['CA'].get_vector()
+        f = next_res['C'].get_vector()
 
-        try:
-            a = res['N'].get_vector()
-            b = res['CA'].get_vector()
-            c = res['C'].get_vector()
-            d = next_res['N'].get_vector()
-        
+        rot_d = rot_atom(angle, (a, b, c, d))
+        rot_e = rot_atom(angle, (b, c, d, e))
+        rot_f = rot_atom(angle, (c, d, e, f))
+    
 
-        except:
-            print('ERROR: missing backbone atoms\nExiting...')
-            exit()
+    # TODO get the last c, n, ca, c bond here
