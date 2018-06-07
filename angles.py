@@ -1,4 +1,5 @@
 from Bio.PDB import *
+from Bio.PDB.Chain import Chain
 
 def rot_atom(angle: float, atoms: tuple):
     """
@@ -36,25 +37,40 @@ def rot_backbone(angles: list, polypeptide: polypeptide):
     Returns the newly constructed polypeptide (does not modify polypeptide param).
 
     Args:
-        angles (list): the angles to modify each atom.  There should be a total of num_residues - 2 angles
+        angles (list): a list of tuples containing dihedral deltas (phi, psi)
         polypeptide (list): the polypeptide to operate on
     """
-    # TODO get the first n, ca, c, n bond here
+    num_residues = len(polypeptide)
+    if num_residues < 2:
+        print('Attempting to operate on empty polypeptide.  Skipping.')
+        return
 
-    for i in range(1, len(polypeptide - 1)):
+    new_struc 
+
+    # This is very similar to Polypeptide.get_phi_psi_list()
+    for i in range(0, num_residues):
         # TODO construct the new polypeptide
         res = polypeptide[i]
-        next_res = polypeptide[i + 1]
-        a = res['N'].get_vector()
-        b = res['CA'].get_vector(),
+        n = res['N'].get_vector()
+        ca = res['CA'].get_vector()
         c = res['C'].get_vector()
-        d = next_res['N'].get_vector()
-        e = next_res['CA'].get_vector()
-        f = next_res['C'].get_vector()
 
-        rot_d = rot_atom(angle, (a, b, c, d))
-        rot_e = rot_atom(angle, (b, c, d, e))
-        rot_f = rot_atom(angle, (c, d, e, f))
-    
+        new_res = Residue()
+        new_chain.add()
+        
+        # Phi angle
+        if i > 0:
+            prev_res = polypeptide[i - 1]
+            c_prev = prev_res['C']
+            rot_d = rot_atom(angles[i][0], (c_prev, n, ca, c))   
+            atom = whatever
+            atom.set_coord
 
-    # TODO get the last c, n, ca, c bond here
+        # (Skip the dihedral angle centered around C-N bond - assumed planar)
+
+        # Psi angle
+        if i < num_residues - 1:
+            next_res = polypeptide[i - 1]
+            n_next = next_res['C']
+            rot_d = rot_atom(angles[i][1], (n, ca, c, n_next))   
+
