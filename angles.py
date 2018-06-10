@@ -1,5 +1,9 @@
+from copy import deepcopy
 from Bio.PDB import *
+from Bio.PDB.Atom import Atom
 from Bio.PDB.Chain import Chain
+from Bio.PDB.Residue import Residue
+from Bio.PDB.Polypeptide import Polypeptide
 
 def rot_atom(angle: float, atoms: tuple):
     """
@@ -31,7 +35,7 @@ def rot_atom(angle: float, atoms: tuple):
     
     return d2
 
-def rot_backbone(angles: list, polypeptide: polypeptide):
+def rot_backbone(angles: list, polypeptide: Polypeptide):
     """
     Rotates each polypeptide backbone atom defined by a set of torsion angles
     Returns the newly constructed polypeptide (does not modify polypeptide param).
@@ -45,32 +49,29 @@ def rot_backbone(angles: list, polypeptide: polypeptide):
         print('Attempting to operate on empty polypeptide.  Skipping.')
         return
 
-    new_struc 
+    new_polypeptide = deepcopy(polypeptide)
 
     # This is very similar to Polypeptide.get_phi_psi_list()
     for i in range(0, num_residues):
         # TODO construct the new polypeptide
-        res = polypeptide[i]
+        res = new_polypeptide[i]
         n = res['N'].get_vector()
         ca = res['CA'].get_vector()
         c = res['C'].get_vector()
-
-        new_res = Residue()
-        new_chain.add()
         
         # Phi angle
         if i > 0:
-            prev_res = polypeptide[i - 1]
+            prev_res = new_polypeptide[i - 1]
             c_prev = prev_res['C']
-            rot_d = rot_atom(angles[i][0], (c_prev, n, ca, c))   
-            atom = whatever
-            atom.set_coord
+            new_coord = rot_atom(angles[i][0], (c_prev, n, ca, c))   
+            res['C'].set_coord(new_coord)
 
         # (Skip the dihedral angle centered around C-N bond - assumed planar)
 
         # Psi angle
         if i < num_residues - 1:
-            next_res = polypeptide[i - 1]
+            next_res = new_polypeptide[i - 1]
             n_next = next_res['C']
-            rot_d = rot_atom(angles[i][1], (n, ca, c, n_next))   
+            new_coord = rot_atom(angles[i][1], (n, ca, c, n_next))
+            next_res['N'].set_coord(new_coord)
 
