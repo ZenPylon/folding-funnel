@@ -71,7 +71,6 @@ def main_load(model_name, filename):
 # Don't worry about hydrogen atoms - we'll add them to the PDB model later
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
-print(torsion_angles)
 backbone_vectors = []
 res_count = len(polypeptide)
 

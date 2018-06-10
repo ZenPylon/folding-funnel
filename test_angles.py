@@ -1,9 +1,11 @@
 """
 Reconstructs atom coordinates from torsion angles
 """
+import numpy as np
 from Bio.PDB import *
 from math import pi, isclose
 from main import remove_hetero, main_load
+from angles import rot_atom, rot_backbone
 
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
 torsion_angles = polypeptide.get_phi_psi_list()
@@ -34,3 +36,13 @@ def test_coords_equal():
     cb_at_origin = nitro_pos.left_multiply(rot)
 
     # isclose(a, b)
+
+def test_rot_atom():
+    res0 = polypeptide[0]
+    res1 = polypeptide[1]
+    res1_n = res1['N'].get_vector()
+    new_coord = rot_atom(0, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    print(new_coord)
+    print(res1_n)
+    no_rotation = np.array_equal(new_coord.get_array(), res1_n.get_array())
+    assert(no_rotation)

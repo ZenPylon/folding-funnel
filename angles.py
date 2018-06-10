@@ -5,7 +5,7 @@ from Bio.PDB.Chain import Chain
 from Bio.PDB.Residue import Residue
 from Bio.PDB.Polypeptide import Polypeptide
 
-def rot_atom(angle: float, atoms: tuple):
+def rot_atom(angle: float, atoms: tuple) -> Vector:
     """
     Rotates the fourth atom "d" in a tuple of four consecutive atoms in a chain.
     Returns the new position of d.
@@ -13,7 +13,10 @@ def rot_atom(angle: float, atoms: tuple):
     Algorithm taken from Practical Conversion from Torsion Space to Cartesian
     Space for In Silico Protein Synthesis
     """
-    a = atoms[0], b = atoms[1], c = atoms[2], d = atoms[3]
+    a = atoms[0].get_vector()
+    b = atoms[1].get_vector()
+    c = atoms[2].get_vector()
+    d = atoms[3].get_vector()
     bc = c - b
     ab = b - a
     bc_normed = bc.normalized()
