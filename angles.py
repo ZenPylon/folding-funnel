@@ -1,9 +1,11 @@
 from copy import deepcopy
+from math import pi
 from Bio.PDB import *
 from Bio.PDB.Atom import Atom
 from Bio.PDB.Chain import Chain
 from Bio.PDB.Residue import Residue
 from Bio.PDB.Polypeptide import Polypeptide
+
 
 def rot_atom(angle: float, atoms: tuple) -> Vector:
     """
@@ -12,7 +14,7 @@ def rot_atom(angle: float, atoms: tuple) -> Vector:
 
     Algorithm taken from Practical Conversion from Torsion Space to Cartesian
     Space for In Silico Protein Synthesis
-    """
+    """  
     a = atoms[0].get_vector()
     b = atoms[1].get_vector()
     c = atoms[2].get_vector()
@@ -21,22 +23,40 @@ def rot_atom(angle: float, atoms: tuple) -> Vector:
     ab = b - a
     bc_normed = bc.normalized()
     
-    # Start at c, and move along the bc vector (amount: length of bond bc)
+    # Start at c, and move along the bc vector (amount: length of bond cd)
     length_cd = (d - c).norm()
     d0 = bc_normed ** length_cd
-
+    
     # Rotate to d1
     n = (ab ** bc_normed).normalized()
-    bond_angle = calc_angle(b, c, d0)
+    bond_angle = pi - calc_angle(b, c, d)
     bond_rot = rotaxis(bond_angle, n)
     d1 = d0.left_multiply(bond_rot)
-
+    # d1 = Vector(-1, -1, 0)
+    
     # Rotate around bc vector based on dihedral angle
     torsion_angle = calc_dihedral(a, b, c, d)
     torsion_rot = rotaxis(torsion_angle, bc_normed)
-    d2 = c + d1.left_multiply(torsion_rot)
-    
-    return d2
+    d2 = d1.left_multiply(torsion_rot)
+    print('Vectors:')
+    print(a)
+    print(b)
+    print(c)
+    print(d)
+    print(f'bc {bc}')
+    print(f'bc normed {bc_normed}')
+    print(f'ab {ab}')
+    print(f'length cd {length_cd}')
+    print(f'n {n}')
+    print(f'd0 {d0}')
+    print(f'bond angle {bond_angle}')
+    print(f'bond rot {bond_rot}')
+    print(f'd1 {d1}')
+    print(f'torsion angle {torsion_angle}')
+    print(f'torsion rot {torsion_rot}')
+    print(f'd2 {d2}')
+    return c + d2
+
 
 def rot_backbone(angles: list, polypeptide: Polypeptide):
     """
@@ -61,12 +81,12 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
         n = res['N'].get_vector()
         ca = res['CA'].get_vector()
         c = res['C'].get_vector()
-        
+
         # Phi angle
         if i > 0:
             prev_res = new_polypeptide[i - 1]
             c_prev = prev_res['C']
-            new_coord = rot_atom(angles[i][0], (c_prev, n, ca, c))   
+            new_coord = rot_atom(angles[i][0], (c_prev, n, ca, c))
             res['C'].set_coord(new_coord)
 
         # (Skip the dihedral angle centered around C-N bond - assumed planar)
@@ -77,4 +97,3 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
             n_next = next_res['C']
             new_coord = rot_atom(angles[i][1], (n, ca, c, n_next))
             next_res['N'].set_coord(new_coord)
-
