@@ -7,9 +7,10 @@ from Bio.PDB.Residue import Residue
 from Bio.PDB.Polypeptide import Polypeptide
 
 
-def rot_atom(angle: float, atoms: tuple) -> Vector:
+def rot_atom(torsion_offset: float, atoms: tuple) -> Vector:
     """
-    Rotates the fourth atom "d" in a tuple of four consecutive atoms in a chain.
+    Rotates the fourth atom "d" in a tuple of four consecutive atoms in a chain by
+    adding `torsion_offset` to the current torsion angle
     Returns the new position of d.
 
     Algorithm taken from Practical Conversion from Torsion Space to Cartesian
@@ -29,14 +30,15 @@ def rot_atom(angle: float, atoms: tuple) -> Vector:
     
     # Rotate to d1
     n = (ab ** bc_normed).normalized()
+    
+    # TODO - Why is this "pi - " fudge factor needed?  What's going wrong?
     bond_angle = pi - calc_angle(b, c, d)
     bond_rot = rotaxis(bond_angle, n)
     d1 = d0.left_multiply(bond_rot)
-    # d1 = Vector(-1, -1, 0)
     
     # Rotate around bc vector based on dihedral angle
     torsion_angle = calc_dihedral(a, b, c, d)
-    torsion_rot = rotaxis(torsion_angle, bc_normed)
+    torsion_rot = rotaxis(torsion_angle + torsion_offset, bc_normed)
     d2 = d1.left_multiply(torsion_rot)
     print('Vectors:')
     print(a)

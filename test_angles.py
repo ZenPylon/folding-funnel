@@ -40,16 +40,27 @@ def test_coords_equal():
 
 
 def test_rot_atom():
-    res0 = polypeptide[1]
-    res1 = polypeptide[2]
-    res0['N'].coord = Vector(0, 0, 0)
-    res0['CA'].coord = Vector(3, 0, 0)
-    res0['C'].coord = Vector(3, 1, 0)
-    res1['N'].coord = Vector(3, 0, -1)
+    res0 = polypeptide[0]
+    res1 = polypeptide[1]
     res1_n = res1['N'].get_vector()
-    
     new_coord = rot_atom(0, (res0['N'], res0['CA'], res0['C'], res1['N']))
+
     print(f'rotated vector {new_coord.get_array()}')
     print(f'original vector {res1_n.get_array()}')
     no_rotation = np.allclose(new_coord.get_array(), res1_n.get_array())
     assert(no_rotation)
+
+    res0['N'].coord = Vector(0, 0, 0)
+    res0['CA'].coord = Vector(3, 0, 0)
+    res0['C'].coord = Vector(3, 1, 0)
+    res1['N'].coord = Vector(3, 1, -1)
+    expected_rotation = Vector(3, 1, 1)
+    res1_n = res1['N'].get_vector()
+
+    new_angle = pi / 2
+    new_coord = rot_atom(new_angle, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    print(f'rotated vector {new_coord.get_array()}')
+    print(f'original vector {res1_n.get_array()}')
+    rotation_match = np.allclose(new_coord.get_array(), expected_rotation.get_array())
+    assert(rotation_match)
+
