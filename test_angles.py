@@ -50,17 +50,20 @@ def test_rot_atom():
     no_rotation = np.allclose(new_coord.get_array(), res1_n.get_array())
     assert(no_rotation)
 
-    res0['N'].coord = Vector(0, 0, 0)
-    res0['CA'].coord = Vector(3, 0, 0)
-    res0['C'].coord = Vector(3, 1, 0)
-    res1['N'].coord = Vector(3, 1, -1)
-    expected_rotation = Vector(3, 1, 1)
-    res1_n = res1['N'].get_vector()
+    # TODO - do gradual rotation on coordinates to explore space
 
-    new_angle = pi / 2
-    new_coord = rot_atom(new_angle, (res0['N'], res0['CA'], res0['C'], res1['N']))
-    print(f'rotated vector {new_coord.get_array()}')
-    print(f'original vector {res1_n.get_array()}')
-    rotation_match = np.allclose(new_coord.get_array(), expected_rotation.get_array())
-    assert(rotation_match)
+    # res0['N'].coord = Vector(0, 0, 0)
+    # res0['CA'].coord = Vector(3, 0, 0)
+    # res0['C'].coord = Vector(5, 0, 0)
+    # res1['N'].coord = Vector(5, 1, 0)
+    # res1_n = res1['N'].get_vector()
+
+    # offset_angle = 3 * pi / 2
+    # expected_rotation = Vector(5, -1, 0) 
+    # new_coord = rot_atom(offset_angle, (res0['N'], res0['CA'], res0['C'], res1['N']))
+
+    # print(f'rotated vector {new_coord.get_array()}')
+    # print(f'expected vector {expected_rotation.get_array()}')
+    # rotation_match = np.allclose(new_coord.get_array(), expected_rotation.get_array())
+    # assert(rotation_match)
 
