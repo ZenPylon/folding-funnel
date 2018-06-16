@@ -4,7 +4,7 @@ Reconstructs atom coordinates from torsion angles
 import numpy as np
 from Bio.PDB import *
 from math import pi, isclose
-from main import remove_hetero, main_load
+from util import remove_hetero, main_load
 from angles import rot_atom, rot_backbone
 
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')

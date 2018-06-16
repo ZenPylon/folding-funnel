@@ -56,7 +56,6 @@ def main_load(model_name, filename):
 
     # Build a polypeptide from our structure and get the torsion angles
     polypeptides = ppb.build_peptides(structure)
-    print(len(polypeptides))
     if len(polypeptides) != 1:
         print(f'ERROR: expected only one polypeptide from PDB structure')
         exit()
