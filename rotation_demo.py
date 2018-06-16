@@ -28,7 +28,8 @@ def update_anim(frame, atoms, positions, scatter, lines):
 
     lines[2].set_data(new_coord[0:2])
     lines[2].set_3d_properties(new_coord[2])
-    # scatter._offsets3d = (new_coord[0], new_coord[1], new_coord[2])
+    scatter.set_data(positions[0:2, :])
+    scatter.set_3d_properties(positions[2, :])
     print(new_coord)
     return atoms, positions, scatter, lines
 
@@ -70,8 +71,10 @@ ax = p3.Axes3D(fig)
 #                  backbone[1, :],
 #                  backbone[2, :],
 #                  c='b')[0] for index in range(num_atoms - 1)]
-scatter = ax.scatter3D(first_positions[0, :], first_positions[1, :],
-             first_positions[2, :], s=100, c=(0, 0, 0))
+scatter = ax.plot(first_positions[0, :], first_positions[1, :],
+             first_positions[2, :], linestyle='', marker='o', 
+             markersize="10", c=(0, 0, 0))[0]
+print(type(scatter))
 
 lines = [ax.plot(first_positions[0, :],
                  first_positions[1, :],
