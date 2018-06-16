@@ -14,7 +14,7 @@ from angles import rot_atom
 # Generate coordinates in script, import into folding_funnel notebook
 num_res = 4
 num_atoms = num_res * 3
-num_frames = 100
+num_frames = 200
 interval = 50
 
 # Tuple of atoms, array of positions
@@ -30,7 +30,8 @@ def update_anim(frame, atoms, positions, scatter, lines):
     lines[2].set_3d_properties(new_coord[2])
     scatter.set_data(positions[0:2, :])
     scatter.set_3d_properties(positions[2, :])
-    print(new_coord)
+
+    print(atoms[3] - atoms[2])
     return atoms, positions, scatter, lines
 
 def get_backbone(polypeptide):
@@ -63,6 +64,9 @@ res1 = polypeptide[1]
 backbone = get_backbone(polypeptide)
 fig = plt.figure()
 ax = p3.Axes3D(fig)
+ax.set_xlim(left=24, right=28)
+ax.set_ylim(bottom=24, top=28)
+ax.set_zlim(bottom=2, top=6)
 # ax.scatter3D(backbone[0, :], backbone[1, :],
 #              backbone[2, :], s=100, c=(0, 0, 0))
 
@@ -74,8 +78,7 @@ ax = p3.Axes3D(fig)
 scatter = ax.plot(first_positions[0, :], first_positions[1, :],
              first_positions[2, :], linestyle='', marker='o', 
              markersize="10", c=(0, 0, 0))[0]
-print(type(scatter))
-
+print(first_positions)
 lines = [ax.plot(first_positions[0, :],
                  first_positions[1, :],
                  first_positions[2, :],
@@ -84,4 +87,5 @@ lines = [ax.plot(first_positions[0, :],
 anim = animation.FuncAnimation(fig, update_anim, frames=num_frames,
                 fargs=((res0['N'], res0['CA'], res0['C'], res1['N']), 
                 first_positions, scatter, lines), interval=interval, blit=False)
+# anim.save('amino_spin.gif', writer='imagemagick')
 plt.show()
