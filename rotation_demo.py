@@ -21,17 +21,15 @@ interval = 50
 def update_anim(frame, atoms, positions, scatter, lines):
     offset = pi / 100
     new_coord = rot_atom(offset, atoms).get_array()
-
     atoms[3].coord = new_coord
     positions[:, 3] = new_coord
-    updated_points = np.array([atom.coord.T for atom in atoms])
 
     lines[2].set_data(new_coord[0:2])
     lines[2].set_3d_properties(new_coord[2])
     scatter.set_data(positions[0:2, :])
     scatter.set_3d_properties(positions[2, :])
+    print(new_coord)
 
-    print(atoms[3] - atoms[2])
     return atoms, positions, scatter, lines
 
 def get_backbone(polypeptide):
@@ -55,9 +53,24 @@ def first_positions(polypeptide):
     coords[:, 3] = res1['N'].coord
     return coords
 
+def test_positions(polypeptide):
+    res0 = polypeptide[0]
+    res1 = polypeptide[1]
+    coords = np.zeros((3, 4))
+    coords[:, 0] = np.array([25, 25, 3])
+    coords[:, 1] = np.array([26, 25, 3])
+    coords[:, 2] = np.array([26, 26, 3])
+    coords[:, 3] = np.array([26, 26, 2])
+    res0['N'].coord = np.array([25, 25, 3]) 
+    res0['CA'].coord = np.array([26, 25, 3]) 
+    res0['C'].coord = np.array([26, 26, 3])
+    res1['N'].coord = np.array([26, 26, 2])
+    return coords
+
 
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
-first_positions = first_positions(polypeptide)
+# first_positions = first_positions(polypeptide)
+first_positions = test_positions(polypeptide)
 res0 = polypeptide[0]
 res1 = polypeptide[1]
 
@@ -67,14 +80,7 @@ ax = p3.Axes3D(fig)
 ax.set_xlim(left=24, right=28)
 ax.set_ylim(bottom=24, top=28)
 ax.set_zlim(bottom=2, top=6)
-# ax.scatter3D(backbone[0, :], backbone[1, :],
-#              backbone[2, :], s=100, c=(0, 0, 0))
 
-
-# lines = [ax.plot(backbone[0, :],
-#                  backbone[1, :],
-#                  backbone[2, :],
-#                  c='b')[0] for index in range(num_atoms - 1)]
 scatter = ax.plot(first_positions[0, :], first_positions[1, :],
              first_positions[2, :], linestyle='', marker='o', 
              markersize="10", c=(0, 0, 0))[0]
