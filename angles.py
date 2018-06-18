@@ -98,7 +98,7 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
 
         # Psi angle
         if i < num_residues - 1:
-            next_res = new_polypeptide[i - 1]
+            next_res = new_polypeptide[i + 1]
             n_next = next_res['C']
             new_coord = rot_atom(angles[i][1], (n, ca, c, n_next))
             next_res['N'].set_coord(np.array(new_coord.get_array()))
