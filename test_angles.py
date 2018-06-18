@@ -43,27 +43,45 @@ def test_rot_atom():
     res0 = polypeptide[0]
     res1 = polypeptide[1]
     res1_n = res1['N'].get_vector()
-    new_coord = rot_atom(0, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    torsion = calc_dihedral(
+                res0['N'].get_vector(), 
+                res0['CA'].get_vector(), 
+                res0['C'].get_vector(), 
+                res1['N'].get_vector(), 
+                )
+    new_coord = rot_atom(torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
 
-    print(f'rotated vector {new_coord.get_array()}')
-    print(f'original vector {res1_n.get_array()}')
+    # print(f'rotated vector {new_coord.get_array()}')
+    # print(f'original vector {res1_n.get_array()}')
     no_rotation = np.allclose(new_coord.get_array(), res1_n.get_array())
     assert(no_rotation)
 
     # TODO - do gradual rotation on coordinates to explore space
 
-    # res0['N'].coord = Vector(0, 0, 0)
-    # res0['CA'].coord = Vector(3, 0, 0)
-    # res0['C'].coord = Vector(5, 0, 0)
-    # res1['N'].coord = Vector(5, 1, 0)
-    # res1_n = res1['N'].get_vector()
+def test_rot_backbone():
+    new_polypeptide = rot_backbone(torsion_angles, polypeptide)
+    matches = []
 
-    # offset_angle = 3 * pi / 2
-    # expected_rotation = Vector(5, -1, 0) 
-    # new_coord = rot_atom(offset_angle, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    for index, res in enumerate(polypeptide):
+        new_res = new_polypeptide[index]
+        matches.append(np.allclose(res['N'].coord, new_res['N'].coord))
+        matches.append(np.allclose(res['CA'].coord, new_res['CA'].coord))
+        matches.append(np.allclose(res['C'].coord, new_res['C'].coord))
 
-    # print(f'rotated vector {new_coord.get_array()}')
-    # print(f'expected vector {expected_rotation.get_array()}')
-    # rotation_match = np.allclose(new_coord.get_array(), expected_rotation.get_array())
-    # assert(rotation_match)
+    assert(all(matches))
+    # Modify the structure, make sure the change is registered
+    torsion_angles[5] = (0, 0)
+    new_polypeptide = rot_backbone(torsion_angles, polypeptide)
+
+    matches = []
+    for index, res in enumerate(polypeptide):
+        new_res = new_polypeptide[index]
+        matches.append(np.allclose(res['N'].coord, new_res['N'].coord))
+        matches.append(np.allclose(res['CA'].coord, new_res['CA'].coord))
+        matches.append(np.allclose(res['C'].coord, new_res['C'].coord))
+
+    assert(not all(matches))
+
+
+
 

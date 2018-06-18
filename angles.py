@@ -76,7 +76,7 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
         return
 
     new_polypeptide = deepcopy(polypeptide)
-    print(f' new poly {new_polypeptide}')
+
     # This is very similar to Polypeptide.get_phi_psi_list()
     for i in range(0, num_residues):
         # TODO construct the new polypeptide
@@ -84,8 +84,6 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
         n = res['N']
         ca = res['CA']
         c = res['C']
-        print(f'old N {polypeptide[i]["N"].coord}')
-        print(f'new N {n.coord}')
 
         # Phi angle
         if i > 0:
@@ -99,7 +97,7 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
         # Psi angle
         if i < num_residues - 1:
             next_res = new_polypeptide[i + 1]
-            n_next = next_res['C']
+            n_next = next_res['N']
             new_coord = rot_atom(angles[i][1], (n, ca, c, n_next))
             next_res['N'].set_coord(np.array(new_coord.get_array()))
 
