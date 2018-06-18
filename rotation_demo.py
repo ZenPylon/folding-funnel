@@ -28,7 +28,6 @@ def update_anim(frame, atoms, positions, scatter, lines):
     lines[2].set_3d_properties(new_coord[2])
     scatter.set_data(positions[0:2, :])
     scatter.set_3d_properties(positions[2, :])
-    print(new_coord)
 
     return atoms, positions, scatter, lines
 
@@ -59,12 +58,12 @@ def test_positions(polypeptide):
     coords = np.zeros((3, 4))
     coords[:, 0] = np.array([25, 25, 3])
     coords[:, 1] = np.array([26, 25, 3])
-    coords[:, 2] = np.array([26, 26, 3])
-    coords[:, 3] = np.array([26, 26, 2])
-    res0['N'].coord = np.array([25, 25, 3]) 
-    res0['CA'].coord = np.array([26, 25, 3]) 
-    res0['C'].coord = np.array([26, 26, 3])
-    res1['N'].coord = np.array([26, 26, 2])
+    coords[:, 2] = np.array([27, 26, 3])
+    coords[:, 3] = np.array([28, 27, 2.65])
+    res0['N'].coord = coords[:, 0] 
+    res0['CA'].coord = coords[:, 1] 
+    res0['C'].coord = coords[:, 2] 
+    res1['N'].coord = coords[:, 3] 
     return coords
 
 
