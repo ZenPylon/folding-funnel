@@ -19,8 +19,8 @@ interval = 50
 
 # Tuple of atoms, array of positions
 def update_anim(frame, atoms, positions, scatter, lines):
-    offset = pi / 100
-    new_coord = rot_atom(offset, atoms).get_array()
+    angle = frame / 100 * pi
+    new_coord = rot_atom(angle, atoms).get_array()
     atoms[3].coord = new_coord
     positions[:, 3] = new_coord
 

@@ -7,10 +7,10 @@ from Bio.PDB.Residue import Residue
 from Bio.PDB.Polypeptide import Polypeptide
 
 
-def rot_atom(torsion_offset: float, atoms: tuple) -> Vector:
+def rot_atom(torsion_angle: float, atoms: tuple) -> Vector:
     """
     Rotates the fourth atom "d" in a tuple of four consecutive atoms in a chain by
-    adding `torsion_offset` to the current torsion angle
+    setting to the current torsion angle to `torsion_angle`
     Returns the new position of d.
 
     Algorithm taken from Practical Conversion from Torsion Space to Cartesian
@@ -37,17 +37,17 @@ def rot_atom(torsion_offset: float, atoms: tuple) -> Vector:
     d1 = d0.left_multiply(bond_rot)
     
     # Rotate around bc vector based on dihedral angle
-    torsion_angle = calc_dihedral(a, b, c, d)
-    torsion_rot = rotaxis(torsion_angle + torsion_offset, bc_normed)
+    # torsion_angle = calc_dihedral(a, b, c, d)
+    torsion_rot = rotaxis(torsion_angle, bc_normed)
     d2 = d1.left_multiply(torsion_rot)
     # print('Vectors:')
-    # print(a)
-    # print(b)
-    # print(c)
-    # print(d)
+    print(a)
+    print(b)
+    print(c)
+    print(d)
     # print(f'bc {bc}')
-    # print(f'bc normed {bc_normed}')
-    # print(f'ab {ab}')
+    print(f'bc normed {bc_normed}')
+    print(f'ab {ab}')
     # print(f'length cd {length_cd}')
     # print(f'n {n}')
     # print(f'd0 {d0}')
