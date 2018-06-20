@@ -44,12 +44,13 @@ def test_rot_atom():
     res1 = polypeptide[1]
     res1_n = res1['N'].get_vector()
     torsion = calc_dihedral(
-                res0['N'].get_vector(), 
-                res0['CA'].get_vector(), 
-                res0['C'].get_vector(), 
-                res1['N'].get_vector(), 
-                )
-    new_coord = rot_atom(torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
+        res0['N'].get_vector(),
+        res0['CA'].get_vector(),
+        res0['C'].get_vector(),
+        res1['N'].get_vector(),
+    )
+    new_coord = rot_atom(
+        torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
 
     # print(f'rotated vector {new_coord.get_array()}')
     # print(f'original vector {res1_n.get_array()}')
@@ -57,6 +58,7 @@ def test_rot_atom():
     assert(no_rotation)
 
     # TODO - do gradual rotation on coordinates to explore space
+
 
 def test_rot_backbone():
     new_polypeptide = rot_backbone(torsion_angles, polypeptide)
@@ -69,8 +71,9 @@ def test_rot_backbone():
         matches.append(np.allclose(res['C'].coord, new_res['C'].coord))
 
     assert(all(matches))
+
     # Modify the structure, make sure the change is registered
-    torsion_angles[5] = (0, 0)
+    torsion_angles[5] = (0.5, 1.4)
     new_polypeptide = rot_backbone(torsion_angles, polypeptide)
 
     matches = []
@@ -82,6 +85,42 @@ def test_rot_backbone():
 
     assert(not all(matches))
 
+    # Make more changes, and ensure that all changes match what we expect
+    torsion_angles[10] = (1.123, 1.677)
+    torsion_angles[35] = (-2, 2)
+    torsion_angles[55] = (3.14, .001)
+    torsion_angles[70] = (-1.01, -.001)
 
+    new_polypeptide = rot_backbone(torsion_angles, polypeptide)
+    new_torsion_angles = new_polypeptide.get_phi_psi_list()
 
+    matches = []
+    for index, torsion_pair in enumerate(torsion_angles):
+        if torsion_pair[0] is not None and new_torsion_angles[index][0] is not None:
+            matches.append(
+                isclose(torsion_pair[0], new_torsion_angles[index][0])
+            )
+        if torsion_pair[1] is not None and new_torsion_angles[index][1] is not None:
+            matches.append(
+                isclose(torsion_pair[1], new_torsion_angles[index][1])
+            )
+    print(torsion_angles[55])
+    print(new_torsion_angles[55])
+    print(len(matches))
+    print(matches)
+    assert(all(matches))
+
+    # 
+    torsion_angles[13] = (1.123, 1.677)
+    torsion_angles[38] = (-2, 2)
+    torsion_angles[50] = (3.14, .001)
+    torsion_angles[65] = (-1.01, -.001)
+    torsion_angles[65] = (-.68, -2.1)
+
+    matches = []
+    for i in range(len(polypeptide) - 1):
+        res = polypeptide
+        new_res = new_polypeptide[i]
+        # Distance between atoms should 
+        matches.append(isclose(0, new_res['N'] - res['N']))
 

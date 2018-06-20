@@ -16,31 +16,33 @@ from angles import rot_atom, rot_backbone
 num_frames = 500
 interval = 100
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
-starting_angles = polypeptide.get_phi_psi_list() 
+starting_angles = polypeptide.get_phi_psi_list()
 torsion_angles = deepcopy(starting_angles)
 backbone = []
 num_atoms = 3 * len(polypeptide)
 
 # Tuple of atoms, array of positions
+
+
 def update_anim(frame, positions, scatter, lines):
-    torsion_index = 0
     if frame < 100:
-        torsion_index = 10
+        torsion_index = 12
     elif frame < 200:
-        torsion_index = 20
+        torsion_index = 24
     elif frame < 300:
-        torsion_index = 30
+        torsion_index = 36
     elif frame < 400:
-        torsion_index = 40
+        torsion_index = 48
     else:
-        torsion_index = 50
+        torsion_index = 60
 
     starting_angle = starting_angles[torsion_index][0]
     print(f'frame {frame}')
     current_angle = starting_angle + (frame / 100) * 2*pi
     print(f'current_angle {current_angle}')
-    torsion_angles[torsion_index] = (current_angle, torsion_angles[torsion_index][1])
-    
+    torsion_angles[torsion_index] = (
+        current_angle, torsion_angles[torsion_index][1])
+
     # Update points
     new_polypeptide = rot_backbone(torsion_angles, polypeptide)
     for index in range(len(new_polypeptide)):
@@ -50,14 +52,16 @@ def update_anim(frame, positions, scatter, lines):
         polypeptide[index]['C'].coord = res['C'].coord
 
     positions = get_backbone(new_polypeptide)
+
     for line in lines:
         line.set_data(positions[0:2, :])
         line.set_3d_properties(positions[2, :])
-    lines[torsion_index].color = 'r'
+
     scatter.set_data(positions[0:2, :])
     scatter.set_3d_properties(positions[2, :])
 
     return positions, scatter, lines
+
 
 def get_backbone(polypeptide):
     coords = np.zeros((3, num_atoms))
@@ -72,20 +76,22 @@ def get_backbone(polypeptide):
 backbone = get_backbone(polypeptide)
 fig = plt.figure()
 ax = p3.Axes3D(fig)
+ax.view_init(elev=40, azim=None)
 ax.set_xlim(left=np.min(backbone[0, :]), right=np.max(backbone[0, :]))
 ax.set_ylim(bottom=np.min(backbone[1, :]), top=np.max(backbone[1, :]))
 ax.set_zlim(bottom=np.min(backbone[2, :]), top=np.max(backbone[2, :]))
 
 scatter = ax.plot(backbone[0, :], backbone[1, :],
-             backbone[2, :], linestyle='', marker='o', 
-             markersize="4", c=(0, 0, 0))[0]
+                  backbone[2, :], linestyle='', marker='o',
+                  markersize="4", c='black')[0]
+
 lines = [ax.plot(backbone[0, :],
                  backbone[1, :],
                  backbone[2, :],
                  c='b')[0] for i in range(num_atoms)]
 
 anim = animation.FuncAnimation(fig, update_anim, frames=num_frames,
-                fargs=(backbone, scatter, lines), interval=interval, 
+                fargs=(backbone, scatter, lines), interval=interval,
                 repeat_delay=1000, blit=False)
-# anim.save('amino_spin.gif', writer='imagemagick')
+anim.save('backbone.gif', writer='imagemagick')
 plt.show()
