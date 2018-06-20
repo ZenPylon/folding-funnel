@@ -92,7 +92,9 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
             new_coord = rot_atom(angles[i][0], (c_prev, n, ca, c))
             res['C'].set_coord(np.array(new_coord.get_array()))
 
-        # (Skip the dihedral angle centered around C-N bond - assumed planar)
+        offset = ca.get_vector() - n.get_vector()
+        offset_ca = n.get_vector() + offset
+        res['CA'].set_coord(np.array(offset_ca.get_array()))
 
         # Psi angle
         if i < num_residues - 1:
