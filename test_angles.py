@@ -42,6 +42,7 @@ def test_coords_equal():
 def test_rot_atom():
     res0 = polypeptide[0]
     res1 = polypeptide[1]
+    first_dist = res1['N'] - res0['C']
     res1_n = res1['N'].get_vector()
     torsion = calc_dihedral(
         res0['N'].get_vector(),
@@ -57,7 +58,15 @@ def test_rot_atom():
     no_rotation = np.allclose(new_coord.get_array(), res1_n.get_array())
     assert(no_rotation)
 
-    # TODO - do gradual rotation on coordinates to explore space
+    torsion = 0
+    new_coord = rot_atom(
+        torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    new_dist =  res1['N'] - res0['C']
+
+    print(new_dist)
+    print(first_dist)
+    assert(isclose(new_dist, first_dist))
+    
 
 
 def test_rot_backbone():
@@ -104,23 +113,52 @@ def test_rot_backbone():
             matches.append(
                 isclose(torsion_pair[1], new_torsion_angles[index][1])
             )
-    print(torsion_angles[55])
-    print(new_torsion_angles[55])
-    print(len(matches))
-    print(matches)
+
     assert(all(matches))
 
-    # 
+
+def test_rot_backbone_test_preserve():
+    """
+    Test to make sure that bond length and bond angle are preserved across
+    torsion angle modifications.
+    """
+    structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
+    torsion_angles = polypeptide.get_phi_psi_list()
+
+    # Make additional changes - make sure that bond length is preserved
+    torsion_angles[5] = (-.68, -2.1)
     torsion_angles[13] = (1.123, 1.677)
     torsion_angles[38] = (-2, 2)
     torsion_angles[50] = (3.14, .001)
     torsion_angles[65] = (-1.01, -.001)
-    torsion_angles[65] = (-.68, -2.1)
+
+    new_polypeptide = rot_backbone(torsion_angles, polypeptide)
+    new_torsion_angles = new_polypeptide.get_phi_psi_list()
 
     matches = []
-    for i in range(len(polypeptide) - 1):
-        res = polypeptide
-        new_res = new_polypeptide[i]
-        # Distance between atoms should 
-        matches.append(isclose(0, new_res['N'] - res['N']))
+    num_res = len(polypeptide)
 
+    for i in range(num_res):
+        res = polypeptide[i]
+        new_res = new_polypeptide[i]
+
+        # Get bond lengths
+        n_to_ca = res['N'] - res['CA']
+        new_n_to_ca = new_res['N'] - new_res['CA']
+        ca_to_c = res['CA'] - res['C']
+        new_ca_to_c = new_res['CA'] - new_res['C']
+
+        # print(n_to_ca)
+        # print(new_n_to_ca)
+        matches.append(isclose(n_to_ca, new_n_to_ca))
+        matches.append(isclose(ca_to_c, new_ca_to_c))
+
+        if i < num_res - 1:
+            res_next = polypeptide[i + 1]
+            new_res_next = new_polypeptide[i + 1]
+            c_to_n = res_next['N'] - res['C']
+            new_c_to_n = new_res_next['N'] - new_res['C']
+
+            matches.append(isclose(c_to_n, new_c_to_n))
+
+    assert(all(matches))
