@@ -90,8 +90,8 @@ lines = [ax.plot(backbone[0, :],
                  backbone[2, :],
                  c='b')[0] for i in range(num_atoms)]
 
-anim = animation.FuncAnimation(fig, update_anim, frames=num_frames,
-                fargs=(backbone, scatter, lines), interval=interval,
-                repeat_delay=1000, blit=False)
-anim.save('backbone.gif', writer='imagemagick')
+# anim = animation.FuncAnimation(fig, update_anim, frames=num_frames,
+                # fargs=(backbone, scatter, lines), interval=interval,
+                # repeat_delay=1000, blit=False)
+# anim.save('backbone.gif', writer='imagemagick')
 plt.show()
