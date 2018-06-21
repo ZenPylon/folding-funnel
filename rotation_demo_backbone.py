@@ -8,15 +8,16 @@ import mpl_toolkits.mplot3d.axes3d as p3
 import numpy as np
 from math import pi
 from matplotlib import animation
+import random
 
-from angles import rot_atom, rot_backbone
+from angles import rot_atom, rot_backbone, get_all_backbone_torsions
 
 # TODO - make 3d plot with different angles
 # Generate coordinates in script, import into folding_funnel notebook
 num_frames = 500
 interval = 100
 structure, residue_list, polypeptide = main_load('ubiq', '1ubq.pdb')
-starting_angles = polypeptide.get_phi_psi_list()
+starting_angles = get_all_backbone_torsions(polypeptide)
 torsion_angles = deepcopy(starting_angles)
 backbone = []
 num_atoms = 3 * len(polypeptide)
@@ -41,7 +42,7 @@ def update_anim(frame, positions, scatter, lines):
     current_angle = starting_angle + (frame / 100) * 2*pi
     print(f'current_angle {current_angle}')
     torsion_angles[torsion_index] = (
-        current_angle, torsion_angles[torsion_index][1])
+        current_angle, torsion_angles[torsion_index][1], torsion_angles[torsion_index][2])
 
     # Update points
     new_polypeptide = rot_backbone(torsion_angles, polypeptide)
@@ -94,4 +95,39 @@ lines = [ax.plot(backbone[0, :],
                 # fargs=(backbone, scatter, lines), interval=interval,
                 # repeat_delay=1000, blit=False)
 # anim.save('backbone.gif', writer='imagemagick')
-plt.show()
+# plt.show()
+
+
+# Second one with modified torsion angles
+# for plot in range(3):
+#     for index, torsion in enumerate(torsion_angles):
+#         offset = .3 
+#         torsion0 = torsion[0] + random.uniform(-offset, offset) if torsion[0] is not None else None
+#         torsion1 = torsion[1] + random.uniform(-offset, offset) if torsion[1] is not None else None
+#         torsion2 = torsion[2] + random.uniform(-offset, offset) if torsion[2] is not None else None
+
+#         torsion_angles[index] = (torsion0, torsion1, torsion2)
+
+#     new_polypeptide = rot_backbone(torsion_angles, polypeptide)
+#     backbone = get_backbone(new_polypeptide)
+#     fig = plt.figure()
+#     ax = p3.Axes3D(fig)
+#     ax.view_init(elev=40, azim=None)
+#     ax.set_xlim(left=np.min(backbone[0, :]), right=np.max(backbone[0, :]))
+#     ax.set_ylim(bottom=np.min(backbone[1, :]), top=np.max(backbone[1, :]))
+#     ax.set_zlim(bottom=np.min(backbone[2, :]), top=np.max(backbone[2, :]))
+
+#     scatter = ax.plot(backbone[0, :], backbone[1, :],
+#                     backbone[2, :], linestyle='', marker='o',
+#                     markersize="4", c='black')[0]
+
+#     lines = [ax.plot(backbone[0, :],
+#                     backbone[1, :],
+#                     backbone[2, :],
+#                     c='b')[0] for i in range(num_atoms)]
+
+#         # anim = animation.FuncAnimation(fig, update_anim, frames=num_frames,
+#                         # fargs=(backbone, scatter, lines), interval=interval,
+#                         # repeat_delay=1000, blit=False)
+#         # anim.save('backbone.gif', writer='imagemagick')
+# plt.show()
