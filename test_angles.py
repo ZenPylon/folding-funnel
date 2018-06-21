@@ -23,15 +23,23 @@ def test_rot_atom():
         res0['C'].get_vector(),
         res1['N'].get_vector(),
     )
-    new_coord = rot_atom(
-        torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    new_coord = rot_atom(torsion, (
+                  res0['N'].get_vector(), 
+                  res0['CA'].get_vector(), 
+                  res0['C'].get_vector(), 
+                  res1['N'].get_vector())
+                  )
 
     no_rotation = np.allclose(new_coord.get_array(), res1_n.get_array())
     assert(no_rotation)
 
     torsion = 0
-    new_coord = rot_atom(
-        torsion, (res0['N'], res0['CA'], res0['C'], res1['N']))
+    new_coord = rot_atom(torsion, (
+                  res0['N'].get_vector(), 
+                  res0['CA'].get_vector(), 
+                  res0['C'].get_vector(), 
+                  res1['N'].get_vector())
+                )
     new_dist = res1['N'] - res0['C']
 
     assert(isclose(new_dist, first_dist))
@@ -85,7 +93,9 @@ def test_rot_backbone():
             matches.append(
                 isclose(torsion_triple[2], new_torsion_angles[index][2])
             )
-
+        print(torsion_triple)
+        print(new_torsion_angles[index])
+    # print(matches)
     assert(all(matches))
 
 # After messing around with Avogadro, it's easy to see that bond lengths

@@ -8,7 +8,7 @@ from Bio.PDB.Residue import Residue
 from Bio.PDB.Polypeptide import Polypeptide
 
 
-def rot_atom(torsion_angle: float, atoms: tuple) -> Vector:
+def rot_atom(torsion_angle: float, atom_coords: tuple) -> Vector:
     """
     Rotates the fourth atom "d" in a tuple of four consecutive atoms in a chain by
     setting to the current torsion angle to `torsion_angle`
@@ -17,10 +17,10 @@ def rot_atom(torsion_angle: float, atoms: tuple) -> Vector:
     Algorithm taken from Practical Conversion from Torsion Space to Cartesian
     Space for In Silico Protein Synthesis
     """
-    a = atoms[0].get_vector()
-    b = atoms[1].get_vector()
-    c = atoms[2].get_vector()
-    d = atoms[3].get_vector()
+    a = atom_coords[0]
+    b = atom_coords[1]
+    c = atom_coords[2]
+    d = atom_coords[3]
     bc = c - b
     ab = b - a
     bc_normed = bc.normalized()
@@ -80,19 +80,29 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
     for i in range(0, num_residues):
         # TODO construct the new polypeptide
         res = new_polypeptide[i]
-        n = res['N']
-        ca = res['CA']
-        c = res['C']
+        n = res['N'].get_vector()
+        ca = res['CA'].get_vector()
+        c = res['C'].get_vector()
 
         if i > 0:
             prev_res = new_polypeptide[i - 1]
-            c_prev = prev_res['C']
-            ca_prev = prev_res['CA']
+            old_prev_res = polypeptide[i - 1]
+            c_prev = prev_res['C'].get_vector()
+            ca_prev = prev_res['CA'].get_vector()
+
+            old_c_prev = old_prev_res['C'].get_vector()
+            old_ca_prev = old_prev_res['CA'].get_vector()
 
             # Omega angle - set this first, since psi1 is followed by omega1
             # which is followed by phi1, followed by psi2, etc.
             new_coord_ca = rot_atom(angles[i][2], (ca_prev, c_prev, n, ca))
             res['CA'].set_coord(np.array(new_coord_ca.get_array()))
+
+            # TODO - why does it need to reference old values?
+            # Shouldn't it base its relative position on the updated nitrogen 
+            # position that's been modified by the previous psi angle
+            # new_coord_ca = rot_atom(angles[i][2], (old_ca_prev, old_c_prev, n, ca))
+            # res['CA'].set_coord(np.array(new_coord_ca.get_array()))
             
             # Phi angle
             new_coord_c = rot_atom(angles[i][0], (c_prev, n, ca, c))
@@ -101,7 +111,7 @@ def rot_backbone(angles: list, polypeptide: Polypeptide):
         # Psi angle
         if i < num_residues - 1:
             next_res = new_polypeptide[i + 1]
-            n_next = next_res['N']
+            n_next = next_res['N'].get_vector()
             new_coord_n = rot_atom(angles[i][1], (n, ca, c, n_next))
             next_res['N'].set_coord(np.array(new_coord_n.get_array()))
 
