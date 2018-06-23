@@ -1,5 +1,4 @@
 from Bio.PDB import *
-from simtk.openmm.app import PDBFile
 from math import pi
 import pandas as pd
 
