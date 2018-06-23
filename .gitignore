@@ -106,3 +106,4 @@ openmm/
 *.prof
 amino_spin.gif
 backbone.gif
+.vscode
