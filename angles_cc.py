@@ -13,6 +13,14 @@ for res in polypeptide:
 
 df = pd.DataFrame(rows, columns=['atom', 'x', 'y', 'z'])
 molecule = cc.Cartesian(df)
-molecule.set_bonds({})
+# molecule.set_bonds({})
 bonds = molecule.get_bonds(use_lookup=True)
-print(bonds)
+zmat = molecule.get_zmat()
+xyz = zmat.to_xyz()
+with pd.option_context('display.max_rows', None):
+    print(xyz.columns)
+    print(molecule.columns)
+    print(cc.xyz_functions.isclose(xyz, molecule))
+
+
+
