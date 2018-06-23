@@ -25,7 +25,7 @@ def remove_hydrogens(model, chain):
         hydrogen_count += len(hydrogens)
 
     print(f'Removed {hydrogen_count} hydrogen atoms')
-        
+
 def main_load(model_name, filename):
     """
     Loads a pdb file and ensures it has one model and chain.
