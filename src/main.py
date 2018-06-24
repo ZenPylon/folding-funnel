@@ -2,22 +2,9 @@ import util
 
 # Don't worry about hydrogen atoms - we'll add them to the PDB model later
 structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
-# torsion_angles = polypeptide.get_phi_psi_list()
-# backbone_vectors = []
-# res_count = len(polypeptide)
 
-
-
-# TODO - refactor logic into function, then apply function to every string of 4 atoms
-# TODO - test by comparing coordinates of original with constructed coordinates
-#        (without modifying the coordinates)
 # TODO - test by changing angles more and more, and plot vs. RMSD distance
 #        Expectation is that it RMSD should increase as angle distance increases
-
-
-
-# print(backbone_vectors)
-
 
 # Construct backbone from angles and distances
 
