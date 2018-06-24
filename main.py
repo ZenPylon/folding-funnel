@@ -39,19 +39,6 @@ structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
 # 1. Plot Angle distance vs RMSD.  Should be positive correlation
 
 
-
-# TODO
-# Try to use ChemCoords to convert between coordinates and bonds 
-# (given by pdb positions and topology).  Verify that
-# 1. Transforming between internal and cartesian stays the same when 
-#    no modifications are made
-# 2. Modifying the angle of a residue halfway through the chain only modifies 
-#    coordinates on that residue or after (no residues before).
-
-# If ChemCoords is unworkable, just construct the backbone iteratively through 
-# local spherical coordinate --> cartersian coordinate geometry, and keep the side
-# chains in the same relative position (relative to the alpha carbon).
-
 # TODO: The Algorithm:
 # 
 # 1. Specify all phi / psi angle deltas (magnitude M) relative to native structure
