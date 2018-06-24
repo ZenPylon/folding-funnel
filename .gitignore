@@ -103,6 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 openmm/
+xyz/
 *.prof
 amino_spin.gif
 backbone.gif

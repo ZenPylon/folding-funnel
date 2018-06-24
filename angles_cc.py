@@ -2,10 +2,11 @@ from util import main_load
 import chemcoord as cc
 import pandas as pd
 from math import pi
+import numpy as np
 
 structure, residue_list, polypeptide = main_load('1ubq', '1ubq.pdb')
-
 rows = []
+
 for res in polypeptide:
     for atom in res:
         name = atom.get_name() 
@@ -37,11 +38,16 @@ df = pd.DataFrame(rows, columns=['atom', 'x', 'y', 'z'])
 molecule = cc.Cartesian(df)
 molecule.set_bonds(bonds)
 zmat = molecule.get_zmat(use_lookup=True)
-xyz = zmat.to_xyz()
+zmat_copy = molecule.get_zmat(use_lookup=True)
+molecule.to_xyz(buf='xyz/1ubq_cart.xyz')
 
-with pd.option_context('display.max_rows', None):
-    print(bonds)
-    print(zmat)
+for i in range(10):
+    zmat.safe_loc[:, 'dihedral'] = np.random.uniform(-10*i, 10*i, num_atoms) + zmat_copy.safe_loc[:, 'dihedral']
+    xyz = zmat.get_cartesian()
+    xyz.to_xyz(buf=f'xyz/1ubq_transform_{i}.xyz')
+    
+
+
 
 
 
