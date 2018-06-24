@@ -32,21 +32,25 @@ for index, atom in enumerate(atoms):
 
 for bond in pdb_bonds:
     cc_bonds[bond[0].index].add(bond[1].index)
+    cc_bonds[bond[1].index].add(bond[0].index)
 
 with pd.option_context('display.max_rows', None):
-    print(cc_positions)
-    print(atom_names)
     cc_df = pd.DataFrame({
             'atom': atom_names, 
             'x': cc_positions[0, :], 
             'y': cc_positions[1, :], 
             'z': cc_positions[2, :]
     })
+
     molecule = cc.Cartesian(cc_df)
     molecule.set_bonds(cc_bonds)
-    zmat = molecule.get_zmat()
+    print(cc_bonds)
+    molecule._give_val_sorted_bond_dict(use_lookup=True)
+    print('getting zmat')
+    zmat = molecule.get_zmat(use_lookup=True)
+    print(zmat)
+    zmat.to_zmat(buf='zmat.xyz')
     molecule2 = zmat.get_cartesian()
-    print(molecule2 - molecule)
 
 
 

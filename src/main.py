@@ -1,7 +1,17 @@
+from math import pi
 import util
 
 # Don't worry about hydrogen atoms - we'll add them to the PDB model later
 structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
+for torsions in polypeptide.get_phi_psi_list():
+    angle0 = None
+    angle1 = None
+    if torsions[0] is not None:
+        angle0 = torsions[0] / pi * 180
+    if torsions[1] is not None:
+        angle1 = torsions[1] / pi * 180
+
+    print((angle0, angle1))
 
 # TODO - test by changing angles more and more, and plot vs. RMSD distance
 #        Expectation is that it RMSD should increase as angle distance increases
