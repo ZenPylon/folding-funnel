@@ -1,13 +1,19 @@
 """
 Testing the funnel hypothesis
 """
-import util
+from simtk.openmm.app import *
+from simtk.openmm import *
+from simtk.unit import *
 import chemcoord as cc
-from amino_data import get_amino_bonds, get_amino_atom_count
-structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
 
-atom_counter = 0
-for res in polypeptide:
-    name = res.get_name()
-    get_amino_bonds(name, atom_counter)
-    atom_counter += get_amino_atom_count(name)
+pdb = PDBFile('1ubq.pdb')
+forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+modeller = Modeller(pdb.topology, pdb.positions)
+modeller.addHydrogens(forcefield)
+
+system = forcefield.createSystem(modeller.topology, nonbondedMethod=PME, nonbondedCutoff=1*nanometer, constraints=HBonds)
+integrator = LangevinIntegrator(300*kelvin, 1/picosecond, 0.002*picoseconds)
+bonds = modeller.topology.bonds()
+
+for bond in bonds:
+    print(bond)
