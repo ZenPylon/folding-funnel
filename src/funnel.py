@@ -44,15 +44,14 @@ with pd.option_context('display.max_rows', None):
 
     molecule = cc.Cartesian(cc_df)
     molecule.set_bonds(cc_bonds)
-    print(cc_bonds)
     molecule._give_val_sorted_bond_dict(use_lookup=True)
-    print('getting zmat')
     zmat = molecule.get_zmat(use_lookup=True)
-    print(zmat)
     zmat.to_zmat(buf='zmat.xyz')
     molecule2 = zmat.get_cartesian()
 
-
+# TODO - figure out how to assign phi and psi angles within zmat
+# e.g. where atom = N, atom[b_index] = CA, atom[a_index] = C, atom[d_index] = N
+# Can this be done as an entire list? (rather than one at a time?)
 
 
 
