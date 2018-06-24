@@ -1,9 +1,9 @@
 """
 Testing the funnel hypothesis
 """
-from simtk.openmm.app import *
-from simtk.openmm import *
-from simtk.unit import *
+from simtk.openmm.app import PDBFile, ForceField, Modeller, PME, HBonds
+from simtk.openmm import LangevinIntegrator
+from simtk.unit import kelvin, nanometer, picosecond, picoseconds
 import chemcoord as cc
 import numpy as np
 import pandas as pd
@@ -20,7 +20,7 @@ atoms = modeller.topology.atoms()
 positions = modeller.getPositions()
 
 cc_bonds = {}
-cc_positions = numpy.zeros((3, modeller.topology.getNumAtoms()))
+cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
 atom_names = []
 
 # Construct bond dictionary and positions chemcoord 
@@ -49,9 +49,10 @@ with pd.option_context('display.max_rows', None):
     zmat.to_zmat(buf='zmat.xyz')
     molecule2 = zmat.get_cartesian()
 
-# TODO - figure out how to assign phi and psi angles within zmat
-# e.g. where atom = N, atom[b_index] = CA, atom[a_index] = C, atom[d_index] = N
-# Can this be done as an entire list? (rather than one at a time?)
-
+    # TODO - figure out how to assign phi and psi angles within zmat
+    # e.g. where atom = N, atom[b_index] = CA, atom[a_index] = C, atom[d_index] = N
+    # Can this be done as an entire list? (rather than one at a time?)
+    # N_atoms = zmat.loc[np.where((zmat.loc[:, 'atom'] == 'N'))]
+    # print('N atoms')
 
 
