@@ -91,13 +91,25 @@ with pd.option_context('display.max_rows', None):
                 (zmat.loc[b_index, 'atom'] == 'C') & \
                 (zmat.loc[a_index, 'atom'] == 'CA') & \
                 (zmat.loc[d_index, 'atom'] == 'N'):
-
             psi_indices.append(i)
-            print('backwards')
+        
+        elif (zmat.loc[i, 'atom'] == 'C') & \
+                (zmat.loc[b_index, 'atom'] == 'N') & \
+                (zmat.loc[a_index, 'atom'] == 'CA') & \
+                (zmat.loc[d_index, 'atom'] == 'C'):
+            phi_indices.append(i)
+
+        elif (zmat.loc[i, 'atom'] == 'C') & \
+                (zmat.loc[b_index, 'atom'] == 'CA') & \
+                (zmat.loc[a_index, 'atom'] == 'N') & \
+                (zmat.loc[d_index, 'atom'] == 'C'):
+            phi_indices.append(i)
 
     for psi in psi_indices:
         print(psi)
     
+    print(f'phi indices {len(phi_indices)}')
+    print(phi_indices)
     print(zmat)
     print(zmat.safe_loc[psi_indices, 'dihedral'])
     zmat.safe_loc[psi_indices, 'dihedral'] = np.zeros(len(psi_indices))
@@ -111,7 +123,7 @@ with pd.option_context('display.max_rows', None):
             psi_list.append(torsions[1] / pi * 180)
     
     print(psi_list)
-    print(zmat.loc[psi_indices, 'dihedral'] - np.array(psi_list))
+    # print(zmat.loc[psi_indices, 'dihedral'] - np.array(psi_list))
         
 
 
