@@ -1,11 +1,17 @@
 from math import pi
+from simtk.openmm.app import PDBFile, ForceField, Modeller, PME, HBonds
+from simtk.unit import kelvin, nanometer, picosecond, picoseconds
+import chemcoord as cc
 import numpy as np
 import util
 
 np.random.seed(20)
 
 # Don't worry about hydrogen atoms - we'll add them to the PDB model later
-structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
+ubiq_zmat = '1ubq.xyz'
+ubiq_pdb = '1ubq.pdb'
+structure, residue_list, polypeptide = util.main_load('ubiq', ubiq_pdb)
+
 for torsions in polypeptide.get_phi_psi_list():
     angle0 = None
     angle1 = None
@@ -17,14 +23,75 @@ for torsions in polypeptide.get_phi_psi_list():
     print((angle0, angle1))
 
 
+def get_modeller(pdb_file: str):
+    pdb = PDBFile('1ubq.pdb')
+    forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+    modeller = Modeller(pdb.topology, pdb.positions)
+    modeller.addHydrogens(forcefield)
+    return modeller
 
-def save_starting_zmat(pdb_name: str, zmat):
+
+def get_zmat(zmat_filename: str):
+    """
+    Loads a zmat file from firebase.  Returns None if it doesn't exist
+
+    Args:
+        zmat_filename - the file name in firebase
+    """
+    zmat_file = load_from_firebase(zmat_filename)
+    zmat = cc.ZMat.read_zmat(zmat_file)
+    return zmat
+
+
+def calculate_zmat(modeller: Modeller):
+    """
+    Calculates the zmat from an OpenMM modeller
+    """
+    # Create new document with field pdb_name, doc_id as random string
+    pdb_bonds = modeller.topology.bonds()
+    atoms = modeller.topology.atoms()
+    positions = modeller.getPositions()
+
+    cc_bonds = {}
+    cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
+    atom_names = []
+
+    # Construct bond dictionary and positions chemcoord
+    for index, atom in enumerate(atoms):
+        cc_bonds[index] = set()
+        pos = positions[index] / nanometer
+        atom_names.append(atom.name)
+        cc_positions[:, index] = pos
+
+    for bond in pdb_bonds:
+        cc_bonds[bond[0].index].add(bond[1].index)
+        cc_bonds[bond[1].index].add(bond[0].index)
+
+    cc_df = pd.DataFrame({
+        'atom': atom_names,
+        'x': cc_positions[0, :],
+        'y': cc_positions[1, :],
+        'z': cc_positions[2, :]
+    })
+
+    molecule = cc.Cartesian(cc_df)
+    molecule.set_bonds(cc_bonds)
+    molecule._give_val_sorted_bond_dict(use_lookup=True)
+    zmat = molecule.get_zmat(use_lookup=True)
+    return zmat
+
+
+def save_starting_zmat(zmat_name: str, zmat: cc.Zmat):
     """
     Saves the initial zmat data (unmodified internal coordinates 
     of the PDB file) to firebase
+
+    Args:
+        zmat_name - name of file to write
+        zmat - the zmat data to save
     """
-    # Create new document with field pdb_name, doc_id as random string
-    print('TODO')
+    save_to_firebase(zmat)
+
 
 def load_starting_zmat(pdb_name: str):
     """
@@ -33,6 +100,7 @@ def load_starting_zmat(pdb_name: str):
     """
     print('TODO')
 
+
 def get_torsion_indices(zmat):
     """
     Return a numpy.array, with first column as phi_indices, second column as psi_indices
@@ -40,20 +108,30 @@ def get_torsion_indices(zmat):
     Args:
         zmat: the zmatrix specifying the molecule
     """
+    print('TODO')
 
-def begin_seqeunce(pdb_name: str, pdb_file: str, offset_size=4 num_configs=30):
+
+def init_model():
+    modeller = get_modeller(ubiq_pdb)
+    starting_zmat = get_zmat(ubiq_zmat)
+    if zmat is None:
+        starting_zmat = calculate_zmat(modeller)
+        save_starting_zmat(zmat)
+
+    changing_zmat = starting_zmat.copy()
+    starting_torsions = get_torsion_indices(starting_zmat)
+    offsets = np.random.choice([0, 0, -1, 1], torsions.shape)
+    run_sequence(starting_torsions, offsets)
+    
+def run_sequence(starting_torsions, offsets, offset_size=4, num_configs=30):
     """
     Args:
         pdb_name: name field in firebase
         pdb_file: path to pdb file
+        offset_size: amount to deviate on each configuration
         num_configs: number of configurations to try
     """
-    modeller = get_modeller(pdb_file)
-    zmat = get_zmat(modeller)
-    save_starting_zmat(pdb_name, zmat)
-    torsions = get_torsion_indices(zmat)
-    offsets = np.random.choice([0, 0, -1, 1], torsions.shape)
-
+   
     print('\n\ntorsions\n\n')
     print(torsions)
     print('offsets')
@@ -61,12 +139,10 @@ def begin_seqeunce(pdb_name: str, pdb_file: str, offset_size=4 num_configs=30):
 
     # Modify (on average) half the torsion angles
     for i in range(num_configs):
-        zmat.safe_loc[torsions[:, 0], 'dihedral'] += offsets[:, 0] + (i * offset_size)
-
-
-
-
-
+        changing_zmat.safe_loc[torsions[:, 0], 'dihedral'] = \
+                starting_torsions[:, 0] + offsets[:, 0] + (i * offset_size)
+        changing_zmat.safe_loc[torsions[:, 1], 'dihedral'] = \
+                starting_torsions[:, 1] + offsets[:, 1] + (i * offset_size)
 
 
 # TODO - test by changing angles more and more, and plot vs. RMSD distance
@@ -76,7 +152,7 @@ def begin_seqeunce(pdb_name: str, pdb_file: str, offset_size=4 num_configs=30):
 
 # 1. Get torsion angles and bond distances for backbone molecules
 # 1. Get vectors for sidechain atoms relative to backbone atom
-# 1. Iterate through each residue and construct each backbone atom 
+# 1. Iterate through each residue and construct each backbone atom
 #    relative to transformed bond angle (use spherical coordinates)
 
 
@@ -93,7 +169,7 @@ def begin_seqeunce(pdb_name: str, pdb_file: str, offset_size=4 num_configs=30):
 
 
 # TODO: The Algorithm:
-# 
+#
 # 1. Specify all phi / psi angle deltas (magnitude M) relative to native structure
 #    and get absolute phi / psi coordinates (calculate native angles + deltas).
 # 2. Convert from angle-space to cartesian coordinates.
