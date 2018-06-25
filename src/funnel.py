@@ -32,9 +32,18 @@ for index, atom in enumerate(atoms):
     atom_names.append(atom.name)
     cc_positions[:, index] = pos
 
+nitro_list = []
+
 for bond in pdb_bonds:
+    if bond[0].name == 'N' or bond[1].name == 'N':
+        nitro_list.append(bond)
+    
     cc_bonds[bond[0].index].add(bond[1].index)
     cc_bonds[bond[1].index].add(bond[0].index)
+
+print(len(nitro_list))
+for nitro in nitro_list:
+    print(nitro)
 
 with pd.option_context('display.max_rows', None):
     cc_df = pd.DataFrame({
