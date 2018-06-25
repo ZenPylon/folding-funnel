@@ -1,12 +1,14 @@
 """
 Testing the funnel hypothesis
 """
+from math import pi
 from simtk.openmm.app import PDBFile, ForceField, Modeller, PME, HBonds
 from simtk.openmm import LangevinIntegrator
 from simtk.unit import kelvin, nanometer, picosecond, picoseconds
 import chemcoord as cc
 import numpy as np
 import pandas as pd
+import util
 
 pdb = PDBFile('1ubq.pdb')
 forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
@@ -21,7 +23,6 @@ positions = modeller.getPositions()
 
 cc_bonds = {}
 cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
-print(cc_positions.shape)
 atom_names = []
 
 # Construct bond dictionary and positions chemcoord 
@@ -47,7 +48,7 @@ with pd.option_context('display.max_rows', None):
     molecule.set_bonds(cc_bonds)
     molecule._give_val_sorted_bond_dict(use_lookup=True)
     zmat = molecule.get_zmat(use_lookup=True)
-    zmat.to_zmat(buf='zmat.xyz')
+    zmat.to_zmat(buf='zmat.xyz', implicit_index=False)
     molecule2 = zmat.get_cartesian()
 
     zmat
@@ -67,8 +68,10 @@ with pd.option_context('display.max_rows', None):
 
         if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):
             print('skipping')
+            print(zmat.loc[i])
             continue
 
+        # Psi angles
         if (zmat.loc[i, 'atom'] == 'N') & \
                 (zmat.loc[b_index, 'atom'] == 'CA') & \
                 (zmat.loc[a_index, 'atom'] == 'C') & \
@@ -86,9 +89,21 @@ with pd.option_context('display.max_rows', None):
     for psi in psi_indices:
         print(psi)
     
+    print(zmat)
+    print(zmat.safe_loc[psi_indices, 'dihedral'])
     zmat.safe_loc[psi_indices, 'dihedral'] = np.zeros(len(psi_indices))
     print(zmat.loc[psi_indices])
 
+    structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
+    
+    psi_list = []
+    for torsions in polypeptide.get_phi_psi_list():
+        if torsions[1] is not None:
+            psi_list.append(torsions[1] / pi * 180)
+    
+    print(psi_list)
+    print(zmat.loc[psi_indices, 'dihedral'] - np.array(psi_list))
+        
 
 
 
