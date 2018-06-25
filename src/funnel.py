@@ -21,6 +21,7 @@ positions = modeller.getPositions()
 
 cc_bonds = {}
 cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
+print(cc_positions.shape)
 atom_names = []
 
 # Construct bond dictionary and positions chemcoord 
@@ -49,10 +50,43 @@ with pd.option_context('display.max_rows', None):
     zmat.to_zmat(buf='zmat.xyz')
     molecule2 = zmat.get_cartesian()
 
+    zmat
+
     # TODO - figure out how to assign phi and psi angles within zmat
     # e.g. where atom = N, atom[b_index] = CA, atom[a_index] = C, atom[d_index] = N
     # Can this be done as an entire list? (rather than one at a time?)
-    # N_atoms = zmat.loc[np.where((zmat.loc[:, 'atom'] == 'N'))]
-    # print('N atoms')
+    phi_indices = []
+    psi_indices = []
+
+    print('getting angles')
+    print(zmat.shape)
+    for i in range(len(zmat.index)):
+        b_index = zmat.loc[i, 'b'] 
+        a_index = zmat.loc[i, 'a'] 
+        d_index = zmat.loc[i, 'd']
+
+        if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):
+            print('skipping')
+            continue
+
+        if (zmat.loc[i, 'atom'] == 'N') & \
+                (zmat.loc[b_index, 'atom'] == 'CA') & \
+                (zmat.loc[a_index, 'atom'] == 'C') & \
+                (zmat.loc[d_index, 'atom'] == 'N'):
+            psi_indices.append((i, zmat.loc[i, 'dihedral']))
+
+        elif (zmat.loc[i, 'atom'] == 'N') & \
+                (zmat.loc[b_index, 'atom'] == 'C') & \
+                (zmat.loc[a_index, 'atom'] == 'CA') & \
+                (zmat.loc[d_index, 'atom'] == 'N'):
+
+            psi_indices.append((i, zmat.loc[i, 'dihedral']))
+            print('backwards')
+
+    for psi in psi_indices:
+        print(psi)
+
+
+
 
 
