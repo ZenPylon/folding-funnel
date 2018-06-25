@@ -1,5 +1,8 @@
 from math import pi
+import numpy as np
 import util
+
+np.random.seed(20)
 
 # Don't worry about hydrogen atoms - we'll add them to the PDB model later
 structure, residue_list, polypeptide = util.main_load('ubiq', '1ubq.pdb')
@@ -12,6 +15,59 @@ for torsions in polypeptide.get_phi_psi_list():
         angle1 = torsions[1] / pi * 180
 
     print((angle0, angle1))
+
+
+
+def save_starting_zmat(pdb_name: str, zmat):
+    """
+    Saves the initial zmat data (unmodified internal coordinates 
+    of the PDB file) to firebase
+    """
+    # Create new document with field pdb_name, doc_id as random string
+    print('TODO')
+
+def load_starting_zmat(pdb_name: str):
+    """
+    Loads the initial zmat data (unmodified internal coordinates 
+    of the PDB file) from firebase
+    """
+    print('TODO')
+
+def get_torsion_indices(zmat):
+    """
+    Return a numpy.array, with first column as phi_indices, second column as psi_indices
+
+    Args:
+        zmat: the zmatrix specifying the molecule
+    """
+
+def begin_seqeunce(pdb_name: str, pdb_file: str, offset_size=4 num_configs=30):
+    """
+    Args:
+        pdb_name: name field in firebase
+        pdb_file: path to pdb file
+        num_configs: number of configurations to try
+    """
+    modeller = get_modeller(pdb_file)
+    zmat = get_zmat(modeller)
+    save_starting_zmat(pdb_name, zmat)
+    torsions = get_torsion_indices(zmat)
+    offsets = np.random.choice([0, 0, -1, 1], torsions.shape)
+
+    print('\n\ntorsions\n\n')
+    print(torsions)
+    print('offsets')
+    print(offsets)
+
+    # Modify (on average) half the torsion angles
+    for i in range(num_configs):
+        zmat.safe_loc[torsions[:, 0], 'dihedral'] += offsets[:, 0] + (i * offset_size)
+
+
+
+
+
+
 
 # TODO - test by changing angles more and more, and plot vs. RMSD distance
 #        Expectation is that it RMSD should increase as angle distance increases
