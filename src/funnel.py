@@ -73,19 +73,21 @@ with pd.option_context('display.max_rows', None):
                 (zmat.loc[b_index, 'atom'] == 'CA') & \
                 (zmat.loc[a_index, 'atom'] == 'C') & \
                 (zmat.loc[d_index, 'atom'] == 'N'):
-            psi_indices.append((i, zmat.loc[i, 'dihedral']))
+            psi_indices.append(i)
 
         elif (zmat.loc[i, 'atom'] == 'N') & \
                 (zmat.loc[b_index, 'atom'] == 'C') & \
                 (zmat.loc[a_index, 'atom'] == 'CA') & \
                 (zmat.loc[d_index, 'atom'] == 'N'):
 
-            psi_indices.append((i, zmat.loc[i, 'dihedral']))
+            psi_indices.append(i)
             print('backwards')
 
     for psi in psi_indices:
         print(psi)
-
+    
+    zmat.safe_loc[psi_indices, 'dihedral'] = np.zeros(len(psi_indices))
+    print(zmat.loc[psi_indices])
 
 
 
