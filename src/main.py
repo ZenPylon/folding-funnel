@@ -98,10 +98,14 @@ def save_starting_zmat(zmat_name: str, zmat: cc.Zmat):
 
 def get_torsion_indices(zmat):
     """
-    Return a numpy.array, with first column as phi_indices, second column as psi_indices
+    Calculates indices into the zmatrix which correspond to phi
+    and psi angles.
 
     Args:
         zmat: the zmatrix specifying the molecule
+    Returns:
+        a numpy.array, with first column as phi_indices, second column 
+        as psi_indices
     """
     phi_indices = []
     psi_indices = []
@@ -188,12 +192,6 @@ init_model()
 
 # Construct backbone from angles and distances
 
-# 1. Get torsion angles and bond distances for backbone molecules
-# 1. Get vectors for sidechain atoms relative to backbone atom
-# 1. Iterate through each residue and construct each backbone atom
-#    relative to transformed bond angle (use spherical coordinates)
-
-
 # THEN
 # 1. Save PDB with minor alterations
 # 1. Calculate RMSD.  Should be small
@@ -204,6 +202,7 @@ init_model()
 # 1. Make increasingly large deviations from loaded structure
 # 1. Calculate RMSD
 # 1. Plot Angle distance vs RMSD.  Should be positive correlation
+
 
 
 # TODO: The Algorithm:
