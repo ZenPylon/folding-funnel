@@ -14,8 +14,8 @@ The response data in `job_dispatch` contains:
 
 ### Process
 1. Start broker process
-1. Broker process loads PDB file, creates zmatrix, and calculates
-   starting torsion angles
+1. Broker process downloads PDB from cloud storage
+1. Broker initializes zmatrix from PDB topology
 1. Broker process listens for worker `init_request` 
 1. Broker process listens for worker `job_request`
 1. Start worker process(es)
@@ -34,7 +34,7 @@ The response data in `job_dispatch` contains:
 1. Worker runs simulation to minimize energy level
 1. Worker records final energy level and final coordinates upon simulation completion
 1. Worker constructs biopython chain with updated coordinates
-1. Worker calculates RMSD between new chain and original chain
+1. Worker calculates RMSD between new chain and original chain using biopython
 1. Worker recalculates torsions with chemcoord based on minimized simulated/structure
 1. Worker records distance in angle space
 1. Worker saves distance in angle space, RMSD, and energy level to firebase
