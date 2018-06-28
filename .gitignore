@@ -103,8 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 openmm/
-xyz/
+data/
 *.prof
 amino_spin.gif
 backbone.gif
 .vscode
+serviceAccountKey.json

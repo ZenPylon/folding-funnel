@@ -60,11 +60,6 @@ with pd.option_context('display.max_rows', None):
     zmat.to_zmat(buf='zmat.xyz', implicit_index=False)
     molecule2 = zmat.get_cartesian()
 
-    zmat
-
-    # TODO - figure out how to assign phi and psi angles within zmat
-    # e.g. where atom = N, atom[b_index] = CA, atom[a_index] = C, atom[d_index] = N
-    # Can this be done as an entire list? (rather than one at a time?)
     phi_indices = []
     psi_indices = []
 
