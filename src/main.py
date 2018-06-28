@@ -1,6 +1,7 @@
 from math import pi
 from simtk.openmm.app import PDBFile, ForceField, Modeller, PME, HBonds
 from simtk.unit import kelvin, nanometer, picosecond, picoseconds
+from molecule_util import get_modeller
 import chemcoord as cc
 import numpy as np
 import pandas as pd
@@ -23,13 +24,6 @@ ubiq_pdb = '1ubq.pdb'
 
 #     print((angle0, angle1))
 
-
-def get_modeller(pdb_file: str):
-    pdb = PDBFile('1ubq.pdb')
-    forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-    modeller = Modeller(pdb.topology, pdb.positions)
-    modeller.addHydrogens(forcefield)
-    return modeller
 
 
 def get_zmat(zmat_filename: str):
