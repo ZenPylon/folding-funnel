@@ -1,5 +1,5 @@
 from google.cloud import storage
-from molecule_util import get_modeller
+from molecule_util import get_modeller, calculate_zmat
 
 bucket_name = 'funnel-folding.appspot.com'
 pdb_file = '1ubq.pdb'
@@ -22,4 +22,5 @@ except Exception as e:
     exit(0)
 
 modeller = get_modeller(f'data/{pdb_file}')
-print(modeller)
+zmat = calculate_zmat(modeller)
+print(zmat)
