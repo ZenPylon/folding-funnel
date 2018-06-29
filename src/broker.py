@@ -35,6 +35,7 @@ def handle_job_request():
 
     num_jobs_requested += 1
     new_torsions = ubiq.get_new_torsions(num_jobs_requested)
+    print(new_torsions)
     return pickle.dumps(new_torsions)
 
 

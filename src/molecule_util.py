@@ -14,6 +14,7 @@ class MoleculeUtil(object):
     def __init__(self, pdb_path, offset_size=4):
         self.pdb_path = pdb_path
         self.offset_size = offset_size
+        self.seed_offsets()
         self.modeller = self._get_modeller()
         self.zmat = self._get_zmat()
         self.torsion_indices = self._get_torsion_indices()
@@ -21,6 +22,10 @@ class MoleculeUtil(object):
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
             self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
         print(self.starting_torsions)
+
+    def seed_offsets(self):
+        self.offsets = np.random.choice(
+            [0, 0, -1, 1], self.starting_torsions.shape)
 
     def get_new_torsions(self, scale_factor):
         """
@@ -34,13 +39,13 @@ class MoleculeUtil(object):
         Returns:
             The new torsion angles
         """
-        offsets = np.random.choice([0, 0, -1, 1], self.starting_torsions.shape)
+        print(self.offsets)
         total_offset = self.offset_size * scale_factor
         new_torsions = np.zeros(shape=self.starting_torsions.shape)
         new_torsions[:, 0] = self.starting_torsions[:, 0] + \
-            (offsets[:, 0] * total_offset)
+            (self.offsets[:, 0] * total_offset)
         new_torsions[:, 1] = self.starting_torsions[:, 1] + \
-            (offsets[:, 1] * total_offset)
+            (self.offsets[:, 1] * total_offset)
         return new_torsions
 
     def _get_modeller(self):
