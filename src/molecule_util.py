@@ -7,11 +7,12 @@ import chemcoord as cc
 
 class MoleculeUtil(object):
     """
-    A utility class for pdb modelling and zmatrix calculation
+    A class for managing a molecule defined by a PDB file
     """
-
-    def __init__(self, pdb_path):
-        np.random.seed(20)
+    np.random.seed(20)
+    
+    def __init__(self, pdb_path, offset_size=4):
+        self.offset_size = offset_size
         self.modeller = self.get_modeller(pdb_path)
         self.zmat = self._get_zmat()
         self.torsion_indices = self._get_torsion_indices()
@@ -112,3 +113,4 @@ class MoleculeUtil(object):
                 phi_indices.append(i)
 
         return np.array([phi_indices, psi_indices]).T
+    
