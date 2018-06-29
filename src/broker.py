@@ -37,7 +37,7 @@ starting_torsions = np.array([zmat.loc[torsion_indices[:, 0], 'dihedral'],
 print(starting_torsions)
 
 
-#
+# 
 # Setup webserver
 #
 
@@ -63,17 +63,11 @@ def handle_job_request():
     global offset_step
 
     num_jobs_requested += 1
-    print('Starting torsions\n\n')
-    print(starting_torsions)
-    print('\n offsets \n')
-    print(offsets)
     new_torsions = np.zeros(shape=starting_torsions.shape)
     total_offset = offset_step * num_jobs_requested
-    print('\nnew torsions\n')
     new_torsions[:, 0] = starting_torsions[:, 0] + (offsets[:, 0] * total_offset)
     new_torsions[:, 1] = starting_torsions[:, 1] + (offsets[:, 1] * total_offset)
-    print(new_torsions)
-    
+
     return pickle.dumps(new_torsions)
 
     # TODO - put this in the worker process
@@ -86,6 +80,7 @@ def handle_job_request():
 
 @app.route('/mark_finished', methods=['POST'])
 def handle_job_finished():
+    global num_jobs_completed
     num_jobs_completed += 1
     print(f'Finished job #{num_jobs_completed}')
 
