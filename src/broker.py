@@ -13,15 +13,10 @@ except Exception as e:
     print(f'Error while initializing PDB file: \n{e}  \nExiting...')
     exit(0)
 
-ubiq = MoleculeUtil(AppSettings.local_pdb_path)
+molecule = MoleculeUtil(AppSettings.local_pdb_path)
 app = Flask(__name__)
 num_jobs_requested = 0
 num_jobs_completed = 0
-
-
-@app.route('/init_request', methods=['GET'])
-def handle_init_request():
-    return pickle.dumps(ubiq.starting_torsions)
 
 
 @app.route('/job_request', methods=['GET'])
@@ -33,9 +28,8 @@ def handle_job_request():
     global num_jobs_requested
     global offset_step
 
+    new_torsions = molecule.get_new_torsions(num_jobs_requested)
     num_jobs_requested += 1
-    new_torsions = ubiq.get_new_torsions(num_jobs_requested)
-    print(new_torsions)
     return pickle.dumps(new_torsions)
 
 
