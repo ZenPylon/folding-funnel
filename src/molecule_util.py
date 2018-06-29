@@ -10,16 +10,35 @@ class MoleculeUtil(object):
     A class for managing a molecule defined by a PDB file
     """
     np.random.seed(20)
-    
+
     def __init__(self, pdb_path, offset_size=4):
         self.offset_size = offset_size
-        self.modeller = self.get_modeller(pdb_path)
+        self.modeller = self._get_modeller(pdb_path)
         self.zmat = self._get_zmat()
         self.torsion_indices = self._get_torsion_indices()
-        self.starting_torsions = np.array([zmat.loc[torsion_indices[:, 0], 'dihedral'],
-                                    zmat.loc[torsion_indices[:, 1], 'dihedral']]).T
-        print(starting_torsions)
+        self.starting_torsions = np.array([
+                self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
+                self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
+        print(self.starting_torsions)
 
+    def get_new_torsions(self, scale_factor):
+        """
+        Calculates and returns new torsion angles based on randomly generated
+        offsets.
+
+        Args:
+            scale_factor: the relative scale of the offset relative to 
+                          self.offset_size
+
+        Returns:
+            The new torsion angles
+        """
+        offsets = np.random.choice([0, 0, -1, 1], self.starting_torsions.shape)
+        total_offset = self.offset_size * scale_factor
+        new_torsions[:, 0] = starting_torsions[:, 0] + (offsets[:, 0] * total_offset)
+        new_torsions[:, 1] = starting_torsions[:, 1] + (offsets[:, 1] * total_offset)
+        return new_torsions
+        
     def _get_modeller(self):
         pdb = PDBFile(self.pdb_file)
         forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
@@ -113,4 +132,3 @@ class MoleculeUtil(object):
                 phi_indices.append(i)
 
         return np.array([phi_indices, psi_indices]).T
-    

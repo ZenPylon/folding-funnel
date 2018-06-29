@@ -34,7 +34,7 @@ def handle_job_request():
     global offset_step
 
     num_jobs_requested += 1
-
+    new_torsions = ubiq.get_new_torsions(num_jobs_requested)
     return pickle.dumps(new_torsions)
 
 
