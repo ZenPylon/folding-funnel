@@ -22,7 +22,7 @@ class MoleculeUtil(object):
     def _get_modeller(self):
         pdb = PDBFile(self.pdb_file)
         forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-        self.modeller = Modeller(pdb.topology, pdb.positions)
+        modeller = Modeller(pdb.topology, pdb.positions)
         modeller.addHydrogens(forcefield)
         return modeller
 
@@ -31,9 +31,9 @@ class MoleculeUtil(object):
         Calculates the zmat from an OpenMM modeller
         """
         # Create new document with field pdb_name, doc_id as random string
-        pdb_bonds = modeller.topology.bonds()
-        atoms = modeller.topology.atoms()
-        positions = modeller.getPositions()
+        pdb_bonds = self.modeller.topology.bonds()
+        atoms = self.modeller.topology.atoms()
+        positions = self.modeller.getPositions()
 
         cc_bonds = {}
         cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
@@ -63,7 +63,7 @@ class MoleculeUtil(object):
         zmat = molecule.get_zmat(use_lookup=True)
         return zmat
 
-    def _get_torsion_indices():
+    def _get_torsion_indices(self):
         """
         Calculates indices into the zmatrix which correspond to phi
         and psi angles.
