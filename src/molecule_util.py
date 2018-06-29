@@ -14,13 +14,13 @@ class MoleculeUtil(object):
     def __init__(self, pdb_path, offset_size=4):
         self.pdb_path = pdb_path
         self.offset_size = offset_size
-        self.seed_offsets()
         self.modeller = self._get_modeller()
         self.zmat = self._get_zmat()
         self.torsion_indices = self._get_torsion_indices()
         self.starting_torsions = np.array([
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
             self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
+        self.seed_offsets()
         print(self.starting_torsions)
 
     def seed_offsets(self):

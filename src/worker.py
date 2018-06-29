@@ -13,6 +13,7 @@ except Exception as e:
     exit(0)
 
 ubiq_molecule = MoleculeUtil(AppSettings.local_pdb_path)
+
 # TODO - put this in the worker process
 # for i in range(num_configs):
 #     zmat.safe_loc[torsion_indices[:, 0], 'dihedral'] = \
