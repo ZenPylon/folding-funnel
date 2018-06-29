@@ -31,9 +31,6 @@ class MoleculeUtil(object):
             300*kelvin, 1/picosecond, 0.002*picoseconds)
         self.simulation = Simulation(
             self.modeller.topology, self.system, self.integrator)
-
-        self.pdb_bonds = self.modeller.topology.bonds()
-        self.pdb_atoms = self.modeller.topology.atoms()
         self.pdb_positions = self.modeller.getPositions()
 
         # Zmat and torsions
@@ -112,7 +109,7 @@ class MoleculeUtil(object):
         for index in range(self.modeller.topology.getNumAtoms()):
             self.cc_bonds[index] = set()
 
-        for bond in self.pdb_bonds:
+        for bond in self.modeller.topology.bonds():
             self.cc_bonds[bond[0].index].add(bond[1].index)
             self.cc_bonds[bond[1].index].add(bond[0].index)
 
@@ -125,7 +122,7 @@ class MoleculeUtil(object):
         """
         cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
         atom_names = []
-        for index, atom in enumerate(self.pdb_atoms):
+        for index, atom in enumerate(self.modeller.topology.atoms()):
             pos = positions[index] / nanometer
             atom_names.append(atom.name)
             cc_positions[:, index] = pos
