@@ -13,7 +13,7 @@ class MoleculeUtil(object):
     """
     np.random.seed(20)
 
-    def __init__(self, pdb_path, offset_size=4):
+    def __init__(self, pdb_path, offset_size=2):
         # OpenMM init
         self.pdb_path = pdb_path
         self.pdb = PDBFile(self.pdb_path)
@@ -76,8 +76,6 @@ class MoleculeUtil(object):
         # Delete solvent that's based on previous positions
         self.modeller.deleteWater()
         cartesian = self.zmat.get_cartesian().sort_index()
-        print('\n cartesian \n')
-        print(cartesian.loc[:5])
         self.simulation.context.setPositions(
             [Vec3(x, y, z) for x, y, z in zip(cartesian['x'], cartesian['y'], cartesian['z'])]
         )
