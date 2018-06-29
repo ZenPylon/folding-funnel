@@ -1,5 +1,6 @@
 import requests
 import pickle
+import numpy as np
 from cloud_util import CloudUtil
 from molecule_util import MoleculeUtil
 from settings import AppSettings
@@ -16,9 +17,15 @@ except Exception as e:
 
 molecule = MoleculeUtil(AppSettings.local_pdb_path)
 
-for i in range(100):
+for i in range(2):
     job = requests.get(f'{AppSettings.host}/job_request')
     new_torsions = pickle.loads(job.content)
     molecule.set_torsions(new_torsions)
-    molecule.run_simulation()
 
+    p_energy, positions = molecule.run_simulation()
+    molecule.set_cc_positions(positions)
+    torsions = molecule.get_torsions()
+    angle_diff = torsions - molecule.starting_torsions
+    angle_dist = np.sqrt(np.dot(angle_diff, angle_diff))
+    requests.post(f'{AppSettings.host}/complete_job',
+                  data=pickle.dumps((p_energy, angle_dist)))

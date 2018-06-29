@@ -31,19 +31,28 @@ class MoleculeUtil(object):
         self.simulation = Simulation(
             self.modeller.topology, self.system, self.integrator)
 
+        self.pdb_bonds = self.modeller.topology.bonds()
+        self.pdb_atoms = self.modeller.topology.atoms()
+        self.pdb_positions = self.modeller.getPositions()
+
         # Zmat and torsions
-        self.zmat = self._get_zmat()
+        self.cc_bonds = {}
+        self.set_cc_positions(self.pdb_positions)
         self.offset_size = offset_size
         self.torsion_indices = self._get_torsion_indices()
         self.starting_torsions = np.array([
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
             self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
         self.seed_offsets()
-        print(self.starting_torsions)
 
     def seed_offsets(self):
         self.offsets = np.random.choice(
             [0, 0, -1, 1], self.starting_torsions.shape)
+
+    def get_torsions(self):
+        return np.array([
+            self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
+            self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
 
     def set_torsions(self, new_torsions):
         self.zmat.safe_loc[self.torsion_indices[:, 0],
@@ -51,7 +60,7 @@ class MoleculeUtil(object):
         self.zmat.safe_loc[self.torsion_indices[:, 1],
                            'dihedral'] = new_torsions[:, 1]
 
-    def get_new_torsions(self, scale_factor):
+    def get_offset_torsions(self, scale_factor):
         """
         Calculates and returns new torsion angles based on randomly generated
         offsets.
@@ -63,7 +72,6 @@ class MoleculeUtil(object):
         Returns:
             The new torsion angles
         """
-        print(self.offsets)
         total_offset = self.offset_size * scale_factor
         new_torsions = np.zeros(shape=self.starting_torsions.shape)
         new_torsions[:, 0] = self.starting_torsions[:, 0] + \
@@ -73,55 +81,62 @@ class MoleculeUtil(object):
         return new_torsions
 
     def run_simulation(self):
+        """
+        Run a simulation to calculate the current configuration's energy level.
+        Note that the atoms will likely move somewhat during the calculation,
+        since energy minimization is used.
+
+        Returns:
+            A tuple of the form (potential_energy, updated_positions)
+        """
         # Delete solvent that's based on previous positions
         self.modeller.deleteWater()
         cartesian = self.zmat.get_cartesian().sort_index()
         self.simulation.context.setPositions(
-            [Vec3(x, y, z) for x, y, z in zip(cartesian['x'], cartesian['y'], cartesian['z'])]
+            [Vec3(x, y, z) for x, y, z in zip(
+                cartesian['x'], cartesian['y'], cartesian['z'])]
         )
         self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
-        self.simulation.minimizeEnergy(maxIterations=100)
-        state = self.simulation.context.getState(getEnergy=True)
+        # self.simulation.minimizeEnergy(maxIterations=100)
+        state = self.simulation.context.getState(
+            getEnergy=True, getPositions=True)
         p_energy = state.getPotentialEnergy()
+        positions = state.getPositions(asNumpy=True)
         print(p_energy)
-        return p_energy
+        return p_energy, positions
 
-    def _get_zmat(self):
+    def _init_pdb_bonds(self):
+        for index, atom in enumerate(self.pdb_atoms):
+            self.cc_bonds[index] = set()
+
+        for bond in self.pdb_bonds:
+            self.cc_bonds[bond[0].index].add(bond[1].index)
+            self.cc_bonds[bond[1].index].add(bond[0].index)
+
+    def set_cc_positions(self, positions):
         """
         Calculates the zmat from an OpenMM modeller
         """
-        # Create new document with field pdb_name, doc_id as random string
-        pdb_bonds=self.modeller.topology.bonds()
-        atoms=self.modeller.topology.atoms()
-        positions=self.modeller.getPositions()
-
-        cc_bonds={}
-        cc_positions=np.zeros((3, self.modeller.topology.getNumAtoms()))
-        atom_names=[]
+        cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
+        atom_names = []
 
         # Construct bond dictionary and positions chemcoord
-        for index, atom in enumerate(atoms):
-            cc_bonds[index]=set()
-            pos=positions[index] / nanometer
+        for index, atom in enumerate(self.pdb_atoms):
+            pos = positions[index] / nanometer
             atom_names.append(atom.name)
-            cc_positions[:, index]=pos
+            cc_positions[:, index] = pos
 
-        for bond in pdb_bonds:
-            cc_bonds[bond[0].index].add(bond[1].index)
-            cc_bonds[bond[1].index].add(bond[0].index)
-
-        cc_df=pd.DataFrame({
+        cc_df = pd.DataFrame({
             'atom': atom_names,
             'x': cc_positions[0, :],
             'y': cc_positions[1, :],
             'z': cc_positions[2, :]
         })
 
-        molecule=cc.Cartesian(cc_df)
-        molecule.set_bonds(cc_bonds)
-        molecule._give_val_sorted_bond_dict(use_lookup=True)
-        zmat=molecule.get_zmat(use_lookup=True)
-        return zmat
+        self.cartesian = cc.Cartesian(cc_df)
+        self.cartesian.set_bonds(self.cc_bonds)
+        self.cartesian._give_val_sorted_bond_dict(use_lookup=True)
+        self.zmat = self.cartesian.get_zmat(use_lookup=True)
 
     def _get_torsion_indices(self):
         """
@@ -134,13 +149,13 @@ class MoleculeUtil(object):
             a numpy.array, with first column as phi_indices, second column
             as psi_indices
         """
-        phi_indices=[]
-        psi_indices=[]
+        phi_indices = []
+        psi_indices = []
 
         for i in range(len(self.zmat.index)):
-            b_index=self.zmat.loc[i, 'b']
-            a_index=self.zmat.loc[i, 'a']
-            d_index=self.zmat.loc[i, 'd']
+            b_index = self.zmat.loc[i, 'b']
+            a_index = self.zmat.loc[i, 'a']
+            d_index = self.zmat.loc[i, 'd']
 
             # If this molecule references a magic string (origin, e_x, e_y, e_z, etc)
             if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):

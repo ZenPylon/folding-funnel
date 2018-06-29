@@ -1,5 +1,5 @@
 import pickle
-from flask import Flask, jsonify
+from flask import Flask, request
 from settings import AppSettings
 from cloud_util import CloudUtil
 from molecule_util import MoleculeUtil
@@ -26,18 +26,19 @@ def handle_job_request():
     Returns a new set of angles for the worker's simulation to start with.
     """
     global num_jobs_requested
-    global offset_step
 
-    new_torsions = molecule.get_new_torsions(num_jobs_requested)
+    new_torsions = molecule.get_offset_torsions(num_jobs_requested)
     num_jobs_requested += 1
     return pickle.dumps(new_torsions)
 
 
-@app.route('/mark_finished', methods=['POST'])
+@app.route('/complete_job', methods=['POST'])
 def handle_job_finished():
     global num_jobs_completed
     num_jobs_completed += 1
-    print(f'Finished job #{num_jobs_completed}')
+    print(f'Finished job {num_jobs_completed}')
+    print(pickle.loads(request.data))
+
 
 
 # Init worker processes
