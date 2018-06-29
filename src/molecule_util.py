@@ -4,98 +4,111 @@ import numpy as np
 import pandas as pd
 import chemcoord as cc
 
-def get_modeller(pdb_file: str):
-    pdb = PDBFile('data/1ubq.pdb')
-    forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-    modeller = Modeller(pdb.topology, pdb.positions)
-    modeller.addHydrogens(forcefield)
-    return modeller
 
-
-def calculate_zmat(modeller: Modeller):
+class MoleculeUtil(object):
     """
-    Calculates the zmat from an OpenMM modeller
+    A utility class for pdb modelling and zmatrix calculation
     """
-    # Create new document with field pdb_name, doc_id as random string
-    pdb_bonds = modeller.topology.bonds()
-    atoms = modeller.topology.atoms()
-    positions = modeller.getPositions()
 
-    cc_bonds = {}
-    cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
-    atom_names = []
+    def __init__(self, pdb_path):
+        np.random.seed(20)
+        self.modeller = self.get_modeller(pdb_path)
+        self.zmat = self._get_zmat()
+        self.torsion_indices = self._get_torsion_indices()
+        self.starting_torsions = np.array([zmat.loc[torsion_indices[:, 0], 'dihedral'],
+                                    zmat.loc[torsion_indices[:, 1], 'dihedral']]).T
+        print(starting_torsions)
 
-    # Construct bond dictionary and positions chemcoord
-    for index, atom in enumerate(atoms):
-        cc_bonds[index] = set()
-        pos = positions[index] / nanometer
-        atom_names.append(atom.name)
-        cc_positions[:, index] = pos
+    def _get_modeller(self):
+        pdb = PDBFile(self.pdb_file)
+        forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+        self.modeller = Modeller(pdb.topology, pdb.positions)
+        modeller.addHydrogens(forcefield)
+        return modeller
 
-    for bond in pdb_bonds:
-        cc_bonds[bond[0].index].add(bond[1].index)
-        cc_bonds[bond[1].index].add(bond[0].index)
+    def _get_zmat(self):
+        """
+        Calculates the zmat from an OpenMM modeller
+        """
+        # Create new document with field pdb_name, doc_id as random string
+        pdb_bonds = modeller.topology.bonds()
+        atoms = modeller.topology.atoms()
+        positions = modeller.getPositions()
 
-    cc_df = pd.DataFrame({
-        'atom': atom_names,
-        'x': cc_positions[0, :],
-        'y': cc_positions[1, :],
-        'z': cc_positions[2, :]
-    })
+        cc_bonds = {}
+        cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
+        atom_names = []
 
-    molecule = cc.Cartesian(cc_df)
-    molecule.set_bonds(cc_bonds)
-    molecule._give_val_sorted_bond_dict(use_lookup=True)
-    zmat = molecule.get_zmat(use_lookup=True)
-    return zmat
+        # Construct bond dictionary and positions chemcoord
+        for index, atom in enumerate(atoms):
+            cc_bonds[index] = set()
+            pos = positions[index] / nanometer
+            atom_names.append(atom.name)
+            cc_positions[:, index] = pos
 
+        for bond in pdb_bonds:
+            cc_bonds[bond[0].index].add(bond[1].index)
+            cc_bonds[bond[1].index].add(bond[0].index)
 
-def get_torsion_indices(zmat):
-    """
-    Calculates indices into the zmatrix which correspond to phi
-    and psi angles.
+        cc_df = pd.DataFrame({
+            'atom': atom_names,
+            'x': cc_positions[0, :],
+            'y': cc_positions[1, :],
+            'z': cc_positions[2, :]
+        })
 
-    Args:
-        zmat: the zmatrix specifying the molecule
-    Returns:
-        a numpy.array, with first column as phi_indices, second column 
-        as psi_indices
-    """
-    phi_indices = []
-    psi_indices = []
+        molecule = cc.Cartesian(cc_df)
+        molecule.set_bonds(cc_bonds)
+        molecule._give_val_sorted_bond_dict(use_lookup=True)
+        zmat = molecule.get_zmat(use_lookup=True)
+        return zmat
 
-    for i in range(len(zmat.index)):
-        b_index = zmat.loc[i, 'b'] 
-        a_index = zmat.loc[i, 'a'] 
-        d_index = zmat.loc[i, 'd']
+    def _get_torsion_indices():
+        """
+        Calculates indices into the zmatrix which correspond to phi
+        and psi angles.
 
-        # If this molecule references a magic string (origin, e_x, e_y, e_z, etc)
-        if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):
-            continue
+        Args:
+            zmat: the zmatrix specifying the molecule
+        Returns:
+            a numpy.array, with first column as phi_indices, second column 
+            as psi_indices
+        """
+        phi_indices = []
+        psi_indices = []
 
-        # Psi angles
-        if (zmat.loc[i, 'atom'] == 'N') & \
-                (zmat.loc[b_index, 'atom'] == 'CA') & \
-                (zmat.loc[a_index, 'atom'] == 'C') & \
-                (zmat.loc[d_index, 'atom'] == 'N'):
-            psi_indices.append(i)
+        for i in range(len(self.zmat.index)):
+            b_index = self.zmat.loc[i, 'b']
+            a_index = self.zmat.loc[i, 'a']
+            d_index = self.zmat.loc[i, 'd']
 
-        elif (zmat.loc[i, 'atom'] == 'N') & \
-                (zmat.loc[b_index, 'atom'] == 'C') & \
-                (zmat.loc[a_index, 'atom'] == 'CA') & \
-                (zmat.loc[d_index, 'atom'] == 'N'):
-            psi_indices.append(i)
-        
-        elif (zmat.loc[i, 'atom'] == 'C') & \
-                (zmat.loc[b_index, 'atom'] == 'N') & \
-                (zmat.loc[a_index, 'atom'] == 'CA') & \
-                (zmat.loc[d_index, 'atom'] == 'C'):
-            phi_indices.append(i)
+            # If this molecule references a magic string (origin, e_x, e_y, e_z, etc)
+            if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):
+                continue
 
-        elif (zmat.loc[i, 'atom'] == 'C') & \
-                (zmat.loc[b_index, 'atom'] == 'CA') & \
-                (zmat.loc[a_index, 'atom'] == 'N') & \
-                (zmat.loc[d_index, 'atom'] == 'C'):
-            phi_indices.append(i)
-    
-    return np.array([phi_indices, psi_indices]).T
+            # Psi angles
+            if (self.zmat.loc[i, 'atom'] == 'N') & \
+                    (self.zmat.loc[b_index, 'atom'] == 'CA') & \
+                    (self.zmat.loc[a_index, 'atom'] == 'C') & \
+                    (self.zmat.loc[d_index, 'atom'] == 'N'):
+                psi_indices.append(i)
+
+            elif (self.zmat.loc[i, 'atom'] == 'N') & \
+                    (self.zmat.loc[b_index, 'atom'] == 'C') & \
+                    (self.zmat.loc[a_index, 'atom'] == 'CA') & \
+                    (self.zmat.loc[d_index, 'atom'] == 'N'):
+                psi_indices.append(i)
+
+            elif (self.zmat.loc[i, 'atom'] == 'C') & \
+                    (self.zmat.loc[b_index, 'atom'] == 'N') & \
+                    (self.zmat.loc[a_index, 'atom'] == 'CA') & \
+                    (self.zmat.loc[d_index, 'atom'] == 'C'):
+                phi_indices.append(i)
+
+            elif (self.zmat.loc[i, 'atom'] == 'C') & \
+                    (self.zmat.loc[b_index, 'atom'] == 'CA') & \
+                    (self.zmat.loc[a_index, 'atom'] == 'N') & \
+                    (self.zmat.loc[d_index, 'atom'] == 'C'):
+                phi_indices.append(i)
+
+        return np.array([phi_indices, psi_indices]).T

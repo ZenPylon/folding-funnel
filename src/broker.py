@@ -1,41 +1,20 @@
-import numpy as np
 import pickle
-from google.cloud import storage
-from molecule_util import get_modeller, calculate_zmat, get_torsion_indices
 from flask import Flask, jsonify
+from settings import AppSettings
+from cloud_util import CloudUtil
+from molecule_util import MoleculeUtil
 
-np.random.seed(20)
 
-bucket_name = 'funnel-folding.appspot.com'
-project_id = 'funnel_folding'
-pdb_file = '1ubq.pdb'
+cloud_util = CloudUtil(AppSettings.project_id, AppSettings.bucket_name)
 
-storage_client = storage.Client()
-bucket = storage_client.bucket(bucket_name)
-pdb = None
-modeller = None
-
-# Load the PDB file and construct the modeller and zmatrix
 try:
-    with open(f'data/{pdb_file}', 'wb+') as f:
-        print('Downloading PDB file...')
-        pdb_blob = bucket.get_blob(f'pdb/{pdb_file}')
-        if pdb_blob is None:
-            print('ERROR: PDB file not found.  Exiting...')
-            exit(0)
-        pdb_blob.download_to_file(f)
-        f.close()
+    cloud_util.download_pdb(AppSettings.cloud_pdb_path,
+                            AppSettings.local_pdb_path)
 except Exception as e:
     print(f'Error while initializing PDB file: \n{e}  \nExiting...')
     exit(0)
 
-modeller = get_modeller(f'data/{pdb_file}')
-zmat = calculate_zmat(modeller)
-torsion_indices = get_torsion_indices(zmat)
-starting_torsions = np.array([zmat.loc[torsion_indices[:, 0], 'dihedral'],
-                              zmat.loc[torsion_indices[:, 1], 'dihedral']]).T
-print(starting_torsions)
-
+ubiq_molecule = MoleculeUtil(AppSettings.local_pdb_path)
 
 # 
 # Setup webserver
@@ -69,13 +48,6 @@ def handle_job_request():
     new_torsions[:, 1] = starting_torsions[:, 1] + (offsets[:, 1] * total_offset)
 
     return pickle.dumps(new_torsions)
-
-    # TODO - put this in the worker process
-    # for i in range(num_configs):
-    #     zmat.safe_loc[torsion_indices[:, 0], 'dihedral'] = \
-    #         starting_torsions[:, 0] + (offsets[:, 0] * i * offset_size)
-    #     zmat.safe_loc[torsion_indices[:, 1], 'dihedral'] = \
-    #         starting_torsions[:, 1] + (offsets[:, 1] * offset_size * i)
 
 
 @app.route('/mark_finished', methods=['POST'])
