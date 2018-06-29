@@ -1,17 +1,12 @@
 from google.cloud import storage
-from google.cloud.pubsub_v1.gapic.publisher_client import PublisherClient
-from google.cloud.pubsub_v1.gapic.subscriber_client import SubscriberClient
 from molecule_util import get_modeller, calculate_zmat
 
 bucket_name = 'funnel-folding.appspot.com'
-
-publisher = PublisherClient()
-subscriber = SubscriberClient()
 project_id = 'funnel_folding'
-
 pdb_file = '1ubq.pdb'
-client = storage.Client()
-bucket = client.bucket(bucket_name)
+
+storage_client = storage.Client()
+bucket = storage_client.bucket(bucket_name)
 pdb = None
 modeller = None
 
@@ -32,11 +27,6 @@ except Exception as e:
 modeller = get_modeller(f'data/{pdb_file}')
 zmat = calculate_zmat(modeller)
 print(zmat)
-# Listen for worker events
-subscriber.create_subscription(
-    f'projects/{project_id}/topics/init_requests',
-    f'projects/{project_id}/subscriptions/broker_init_request',
-)
 
 # Init worker processes
 
