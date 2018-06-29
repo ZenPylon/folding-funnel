@@ -16,8 +16,9 @@ except Exception as e:
 
 molecule = MoleculeUtil(AppSettings.local_pdb_path)
 
-job = requests.get(f'{AppSettings.host}/job_request')
-new_torsions = pickle.loads(job.content)
-molecule.set_torsions(new_torsions)
-molecule.run_simulation()
+for i in range(8):
+    job = requests.get(f'{AppSettings.host}/job_request')
+    new_torsions = pickle.loads(job.content)
+    molecule.set_torsions(new_torsions)
+    molecule.run_simulation()
 

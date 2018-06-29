@@ -57,7 +57,7 @@ class MoleculeUtil(object):
         offsets.
 
         Args:
-            scale_factor: the relative scale of the offset relative to 
+            scale_factor: the relative scale of the offset relative to
                           self.offset_size
 
         Returns:
@@ -74,53 +74,55 @@ class MoleculeUtil(object):
 
     def run_simulation(self):
         # Delete solvent that's based on previous positions
-        # self.modeller.deleteWater()
+        self.modeller.deleteWater()
         cartesian = self.zmat.get_cartesian().sort_index()
         print('\n cartesian \n')
-        print(cartesian.loc[:100])
-        print('\n modeler positions \n')
-
-        for position in self.modeller.positions[:100]:
-            print(position)
-        # self.simulation.context.setPositions()
-        # self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
-        # self.simulation.minimizeEnergy(maxIterations=100)
+        print(cartesian.loc[:5])
+        self.simulation.context.setPositions(
+            [Vec3(x, y, z) for x, y, z in zip(cartesian['x'], cartesian['y'], cartesian['z'])]
+        )
+        self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
+        self.simulation.minimizeEnergy(maxIterations=100)
+        state = self.simulation.context.getState(getEnergy=True)
+        p_energy = state.getPotentialEnergy()
+        print(p_energy)
+        return p_energy
 
     def _get_zmat(self):
         """
         Calculates the zmat from an OpenMM modeller
         """
         # Create new document with field pdb_name, doc_id as random string
-        pdb_bonds = self.modeller.topology.bonds()
-        atoms = self.modeller.topology.atoms()
-        positions = self.modeller.getPositions()
+        pdb_bonds=self.modeller.topology.bonds()
+        atoms=self.modeller.topology.atoms()
+        positions=self.modeller.getPositions()
 
-        cc_bonds = {}
-        cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
-        atom_names = []
+        cc_bonds={}
+        cc_positions=np.zeros((3, self.modeller.topology.getNumAtoms()))
+        atom_names=[]
 
         # Construct bond dictionary and positions chemcoord
         for index, atom in enumerate(atoms):
-            cc_bonds[index] = set()
-            pos = positions[index] / nanometer
+            cc_bonds[index]=set()
+            pos=positions[index] / nanometer
             atom_names.append(atom.name)
-            cc_positions[:, index] = pos
+            cc_positions[:, index]=pos
 
         for bond in pdb_bonds:
             cc_bonds[bond[0].index].add(bond[1].index)
             cc_bonds[bond[1].index].add(bond[0].index)
 
-        cc_df = pd.DataFrame({
+        cc_df=pd.DataFrame({
             'atom': atom_names,
             'x': cc_positions[0, :],
             'y': cc_positions[1, :],
             'z': cc_positions[2, :]
         })
 
-        molecule = cc.Cartesian(cc_df)
+        molecule=cc.Cartesian(cc_df)
         molecule.set_bonds(cc_bonds)
         molecule._give_val_sorted_bond_dict(use_lookup=True)
-        zmat = molecule.get_zmat(use_lookup=True)
+        zmat=molecule.get_zmat(use_lookup=True)
         return zmat
 
     def _get_torsion_indices(self):
@@ -131,16 +133,16 @@ class MoleculeUtil(object):
         Args:
             zmat: the zmatrix specifying the molecule
         Returns:
-            a numpy.array, with first column as phi_indices, second column 
+            a numpy.array, with first column as phi_indices, second column
             as psi_indices
         """
-        phi_indices = []
-        psi_indices = []
+        phi_indices=[]
+        psi_indices=[]
 
         for i in range(len(self.zmat.index)):
-            b_index = self.zmat.loc[i, 'b']
-            a_index = self.zmat.loc[i, 'a']
-            d_index = self.zmat.loc[i, 'd']
+            b_index=self.zmat.loc[i, 'b']
+            a_index=self.zmat.loc[i, 'a']
+            d_index=self.zmat.loc[i, 'd']
 
             # If this molecule references a magic string (origin, e_x, e_y, e_z, etc)
             if isinstance(b_index, str) or isinstance(a_index, str) or isinstance(d_index, str):
