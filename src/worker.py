@@ -1,3 +1,5 @@
+import requests
+import pickle
 from cloud_util import CloudUtil
 from molecule_util import MoleculeUtil
 from settings import AppSettings
@@ -12,11 +14,10 @@ except Exception as e:
     print(f'Error while initializing PDB file: \n{e}  \nExiting...')
     exit(0)
 
-ubiq_molecule = MoleculeUtil(AppSettings.local_pdb_path)
+molecule = MoleculeUtil(AppSettings.local_pdb_path)
 
-# TODO - put this in the worker process
-# for i in range(num_configs):
-#     zmat.safe_loc[torsion_indices[:, 0], 'dihedral'] = \
-#         starting_torsions[:, 0] + (offsets[:, 0] * i * offset_size)
-#     zmat.safe_loc[torsion_indices[:, 1], 'dihedral'] = \
-#         starting_torsions[:, 1] + (offsets[:, 1] * offset_size * i)
+job = requests.get(f'{AppSettings.host}/job_request')
+new_torsions = pickle.loads(job.content)
+molecule.set_torsions(new_torsions)
+molecule.run_simulation()
+

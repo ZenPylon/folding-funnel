@@ -1,4 +1,5 @@
 from simtk.openmm.app import PDBFile, Simulation, ForceField, Modeller, PME, HBonds
+from simtk.openmm import LangevinIntegrator
 from simtk.openmm.vec3 import Vec3
 from simtk.unit import kelvin, nanometer, picosecond, picoseconds
 import numpy as np
@@ -15,11 +16,11 @@ class MoleculeUtil(object):
     def __init__(self, pdb_path, offset_size=4):
         # OpenMM init
         self.pdb_path = pdb_path
-        pdb = PDBFile(self.pdb_path)
+        self.pdb = PDBFile(self.pdb_path)
         self.forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-        self.modeller = Modeller(pdb.topology, pdb.positions)
-        modeller.addHydrogens(forcefield)
-        self.system = forcefield.createSystem(
+        self.modeller = Modeller(self.pdb.topology, self.pdb.positions)
+        self.modeller.addHydrogens(self.forcefield)
+        self.system = self.forcefield.createSystem(
             self.modeller.topology,
             nonbondedMethod=PME,
             nonbondedCutoff=1*nanometer,
@@ -45,9 +46,9 @@ class MoleculeUtil(object):
             [0, 0, -1, 1], self.starting_torsions.shape)
 
     def set_torsions(self, new_torsions):
-        self.zmat.safe_loc[molecule.torsion_indices[:, 0],
+        self.zmat.safe_loc[self.torsion_indices[:, 0],
                            'dihedral'] = new_torsions[:, 0]
-        self.zmat.safe_loc[molecule.torsion_indices[:, 1],
+        self.zmat.safe_loc[self.torsion_indices[:, 1],
                            'dihedral'] = new_torsions[:, 1]
 
     def get_new_torsions(self, scale_factor):
@@ -74,11 +75,13 @@ class MoleculeUtil(object):
     def run_simulation(self):
         # Delete solvent that's based on previous positions
         # self.modeller.deleteWater()
-        cartesian = self.zmat.get_cartesian()
+        cartesian = self.zmat.get_cartesian().sort_index()
         print('\n cartesian \n')
         print(cartesian.loc[:100])
         print('\n modeler positions \n')
-        print(self.modeller.positions[:100])
+
+        for position in self.modeller.positions[:100]:
+            print(position)
         # self.simulation.context.setPositions()
         # self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
         # self.simulation.minimizeEnergy(maxIterations=100)
