@@ -19,6 +19,7 @@ class MoleculeUtil(object):
         self.pdb = PDBFile(self.pdb_path)
         self.forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
         self.modeller = Modeller(self.pdb.topology, self.pdb.positions)
+        self.modeller.deleteWater()
         self.modeller.addHydrogens(self.forcefield)
         self.system = self.forcefield.createSystem(
             self.modeller.topology,
@@ -37,6 +38,7 @@ class MoleculeUtil(object):
 
         # Zmat and torsions
         self.cc_bonds = {}
+        self._init_pdb_bonds()
         self.set_cc_positions(self.pdb_positions)
         self.offset_size = offset_size
         self.torsion_indices = self._get_torsion_indices()
@@ -106,7 +108,8 @@ class MoleculeUtil(object):
         return p_energy, positions
 
     def _init_pdb_bonds(self):
-        for index, atom in enumerate(self.pdb_atoms):
+        """Construct a dictionary describing the PDB's bonds for chemcoord use"""
+        for index, atom in enumerate(self.pdb_bonds):
             self.cc_bonds[index] = set()
 
         for bond in self.pdb_bonds:
@@ -116,16 +119,19 @@ class MoleculeUtil(object):
     def set_cc_positions(self, positions):
         """
         Calculates the zmat from an OpenMM modeller
+
+        Args:
+            positions (list): A list 
         """
         cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
         atom_names = []
-
-        # Construct bond dictionary and positions chemcoord
         for index, atom in enumerate(self.pdb_atoms):
             pos = positions[index] / nanometer
             atom_names.append(atom.name)
             cc_positions[:, index] = pos
 
+        # print(cc_positions)
+        # print(atom_names)
         cc_df = pd.DataFrame({
             'atom': atom_names,
             'x': cc_positions[0, :],
