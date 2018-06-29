@@ -109,7 +109,7 @@ class MoleculeUtil(object):
 
     def _init_pdb_bonds(self):
         """Construct a dictionary describing the PDB's bonds for chemcoord use"""
-        for index, atom in enumerate(self.pdb_bonds):
+        for index in range(self.modeller.topology.getNumAtoms()):
             self.cc_bonds[index] = set()
 
         for bond in self.pdb_bonds:

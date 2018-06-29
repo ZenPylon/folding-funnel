@@ -14,6 +14,8 @@ except Exception as e:
     exit(0)
 
 molecule = MoleculeUtil(AppSettings.local_pdb_path)
+print('Molecule initialized')
+
 app = Flask(__name__)
 num_jobs_requested = 0
 num_jobs_completed = 0
