@@ -12,13 +12,14 @@ class MoleculeUtil(object):
     np.random.seed(20)
 
     def __init__(self, pdb_path, offset_size=4):
+        self.pdb_path = pdb_path
         self.offset_size = offset_size
-        self.modeller = self._get_modeller(pdb_path)
+        self.modeller = self._get_modeller()
         self.zmat = self._get_zmat()
         self.torsion_indices = self._get_torsion_indices()
         self.starting_torsions = np.array([
-                self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
-                self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
+            self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
+            self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
         print(self.starting_torsions)
 
     def get_new_torsions(self, scale_factor):
@@ -35,12 +36,15 @@ class MoleculeUtil(object):
         """
         offsets = np.random.choice([0, 0, -1, 1], self.starting_torsions.shape)
         total_offset = self.offset_size * scale_factor
-        new_torsions[:, 0] = starting_torsions[:, 0] + (offsets[:, 0] * total_offset)
-        new_torsions[:, 1] = starting_torsions[:, 1] + (offsets[:, 1] * total_offset)
+        new_torsions = np.zeros(shape=self.starting_torsions.shape)
+        new_torsions[:, 0] = self.starting_torsions[:, 0] + \
+            (offsets[:, 0] * total_offset)
+        new_torsions[:, 1] = self.starting_torsions[:, 1] + \
+            (offsets[:, 1] * total_offset)
         return new_torsions
-        
+
     def _get_modeller(self):
-        pdb = PDBFile(self.pdb_file)
+        pdb = PDBFile(self.pdb_path)
         forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
         modeller = Modeller(pdb.topology, pdb.positions)
         modeller.addHydrogens(forcefield)
@@ -56,7 +60,7 @@ class MoleculeUtil(object):
         positions = self.modeller.getPositions()
 
         cc_bonds = {}
-        cc_positions = np.zeros((3, modeller.topology.getNumAtoms()))
+        cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
         atom_names = []
 
         # Construct bond dictionary and positions chemcoord
