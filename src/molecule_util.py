@@ -1,4 +1,5 @@
-from simtk.openmm.app import PDBFile, ForceField, Modeller, PME, HBonds
+from simtk.openmm.app import PDBFile, Simulation, ForceField, Modeller, PME, HBonds
+from simtk.openmm.vec3 import Vec3
 from simtk.unit import kelvin, nanometer, picosecond, picoseconds
 import numpy as np
 import pandas as pd
@@ -12,10 +13,26 @@ class MoleculeUtil(object):
     np.random.seed(20)
 
     def __init__(self, pdb_path, offset_size=4):
+        # OpenMM init
         self.pdb_path = pdb_path
-        self.offset_size = offset_size
-        self.modeller = self._get_modeller()
+        pdb = PDBFile(self.pdb_path)
+        self.forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+        self.modeller = Modeller(pdb.topology, pdb.positions)
+        modeller.addHydrogens(forcefield)
+        self.system = forcefield.createSystem(
+            self.modeller.topology,
+            nonbondedMethod=PME,
+            nonbondedCutoff=1*nanometer,
+            constraints=HBonds
+        )
+        self.integrator = LangevinIntegrator(
+            300*kelvin, 1/picosecond, 0.002*picoseconds)
+        self.simulation = Simulation(
+            self.modeller.topology, self.system, self.integrator)
+
+        # Zmat and torsions
         self.zmat = self._get_zmat()
+        self.offset_size = offset_size
         self.torsion_indices = self._get_torsion_indices()
         self.starting_torsions = np.array([
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
@@ -26,6 +43,12 @@ class MoleculeUtil(object):
     def seed_offsets(self):
         self.offsets = np.random.choice(
             [0, 0, -1, 1], self.starting_torsions.shape)
+
+    def set_torsions(self, new_torsions):
+        self.zmat.safe_loc[molecule.torsion_indices[:, 0],
+                           'dihedral'] = new_torsions[:, 0]
+        self.zmat.safe_loc[molecule.torsion_indices[:, 1],
+                           'dihedral'] = new_torsions[:, 1]
 
     def get_new_torsions(self, scale_factor):
         """
@@ -48,12 +71,17 @@ class MoleculeUtil(object):
             (self.offsets[:, 1] * total_offset)
         return new_torsions
 
-    def _get_modeller(self):
-        pdb = PDBFile(self.pdb_path)
-        forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-        modeller = Modeller(pdb.topology, pdb.positions)
-        modeller.addHydrogens(forcefield)
-        return modeller
+    def run_simulation(self):
+        # Delete solvent that's based on previous positions
+        # self.modeller.deleteWater()
+        cartesian = self.zmat.get_cartesian()
+        print('\n cartesian \n')
+        print(cartesian.loc[:100])
+        print('\n modeler positions \n')
+        print(self.modeller.positions[:100])
+        # self.simulation.context.setPositions()
+        # self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
+        # self.simulation.minimizeEnergy(maxIterations=100)
 
     def _get_zmat(self):
         """
