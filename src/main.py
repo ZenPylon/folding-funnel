@@ -17,14 +17,7 @@ def run_sequence(zmat: cc.Zmat, starting_torsions, torsion_indices, offsets, off
     """
 
     # Modify (on average) half the torsion angles
-    for i in range(num_configs):
-        zmat.safe_loc[torsion_indices[:, 0], 'dihedral'] = \
-            starting_torsions[:, 0] + (offsets[:, 0] * i * offset_size)
-        zmat.safe_loc[torsion_indices[:, 1], 'dihedral'] = \
-            starting_torsions[:, 1] + (offsets[:, 1] * offset_size * i)
-        print(zmat.loc[torsion_indices[:, 0], 'dihedral'])
-        print(zmat.loc[torsion_indices[:, 1], 'dihedral'])
+    
 
 
-init_model()
 
