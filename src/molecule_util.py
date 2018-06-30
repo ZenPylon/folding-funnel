@@ -89,7 +89,6 @@ class MoleculeUtil(object):
             A tuple of the form (potential_energy, updated_positions)
         """
         # Delete solvent that's based on previous positions
-        self.modeller.deleteWater()
         cartesian = self.zmat.get_cartesian().sort_index()
         self.simulation.context.setPositions(
             [Vec3(x, y, z) for x, y, z in zip(
@@ -99,9 +98,10 @@ class MoleculeUtil(object):
         # self.simulation.minimizeEnergy(maxIterations=100)
         state = self.simulation.context.getState(
             getEnergy=True, getPositions=True)
+        self.modeller.deleteWater()
+
         p_energy = state.getPotentialEnergy()
         positions = state.getPositions(asNumpy=True)
-        print(p_energy)
         return p_energy, positions
 
     def _init_pdb_bonds(self):
