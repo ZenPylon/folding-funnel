@@ -19,7 +19,11 @@ class MoleculeUtil(object):
         self.pdb = PDBFile(self.pdb_path)
         self.forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
         self.modeller = Modeller(self.pdb.topology, self.pdb.positions)
+
+        # Remove any water that might be present in the PDB file
         self.modeller.deleteWater()
+
+        # Add any hydrogens not present
         self.modeller.addHydrogens(self.forcefield)
         self.system = self.forcefield.createSystem(
             self.modeller.topology,
@@ -33,12 +37,17 @@ class MoleculeUtil(object):
             self.modeller.topology, self.system, self.integrator)
         self.pdb_positions = self.modeller.getPositions()
 
-        # Zmat and torsions
+        # Initialize bond dictionary and positions for chemcoord
         self.cc_bonds = {}
+        self.offset_size = offset_size
         self._init_pdb_bonds()
         self.set_cc_positions(self.pdb_positions)
-        self.offset_size = offset_size
+
+        # Perform initial minimization, which updates self.pdb_positions
+        min_energy, min_positions = self.run_simulation()
+
         self.torsion_indices = self._get_torsion_indices()
+        self.starting_positions = min_positions 
         self.starting_torsions = np.array([
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
             self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
@@ -95,7 +104,7 @@ class MoleculeUtil(object):
                 cartesian['x'], cartesian['y'], cartesian['z'])]
         )
         self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
-        # self.simulation.minimizeEnergy(maxIterations=100)
+        self.simulation.minimizeEnergy(maxIterations=20)
         state = self.simulation.context.getState(
             getEnergy=True, getPositions=True)
         self.modeller.deleteWater()
@@ -120,6 +129,13 @@ class MoleculeUtil(object):
         Args:
             positions (list): A list 
         """
+        cc_df = self._get_cartesian_df(positions)
+        self.cartesian = cc.Cartesian(cc_df)
+        self.cartesian.set_bonds(self.cc_bonds)
+        self.cartesian._give_val_sorted_bond_dict(use_lookup=True)
+        self.zmat = self.cartesian.get_zmat(use_lookup=True)
+
+    def _get_cartesian_df(self, positions):
         cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
         atom_names = []
         for index, atom in enumerate(self.modeller.topology.atoms()):
@@ -135,11 +151,7 @@ class MoleculeUtil(object):
             'y': cc_positions[1, :],
             'z': cc_positions[2, :]
         })
-
-        self.cartesian = cc.Cartesian(cc_df)
-        self.cartesian.set_bonds(self.cc_bonds)
-        self.cartesian._give_val_sorted_bond_dict(use_lookup=True)
-        self.zmat = self.cartesian.get_zmat(use_lookup=True)
+        return cc_df
 
     def _get_torsion_indices(self):
         """
