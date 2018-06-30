@@ -23,9 +23,11 @@ for i in range(2):
     molecule.set_torsions(new_torsions)
 
     p_energy, positions = molecule.run_simulation()
+    print(p_energy)
     molecule.set_cc_positions(positions)
     torsions = molecule.get_torsions()
-    angle_diff = torsions - molecule.starting_torsions
+    angle_diff = torsions.flatten() - molecule.starting_torsions.flatten()
+    print(angle_diff)
     angle_dist = np.sqrt(np.dot(angle_diff, angle_diff))
     requests.post(f'{AppSettings.host}/complete_job',
                   data=pickle.dumps((p_energy, angle_dist)))

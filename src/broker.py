@@ -40,6 +40,7 @@ def handle_job_finished():
     num_jobs_completed += 1
     print(f'Finished job {num_jobs_completed}')
     print(pickle.loads(request.data))
+    return 'OK'
 
 
 
