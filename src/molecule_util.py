@@ -45,7 +45,9 @@ class MoleculeUtil(object):
 
         # Perform initial minimization, which updates self.pdb_positions
         min_energy, min_positions = self.run_simulation()
-
+        
+        # Reset the positions after the minimization
+        self.set_cc_positions(self.pdb_positions)
         self.torsion_indices = self._get_torsion_indices()
         self.starting_positions = min_positions 
         self.starting_torsions = np.array([
@@ -56,7 +58,6 @@ class MoleculeUtil(object):
     def _add_backbone_restraint(self):
         # https://github.com/ParmEd/ParmEd/wiki/OpenMM-Tricks-and-Recipes#positional-restraints
         positions = self.modeller.getPositions()
-        print('\n\nadd_backbone restraint positions\n\n')
         force = CustomExternalForce('k*((x-x0)^2+(y-y0)^2+(z-z0)^2)')
         force.addGlobalParameter('k', 5.0*u.kilocalories_per_mole/u.angstroms**2)
         force.addPerParticleParameter('x0')
@@ -65,7 +66,6 @@ class MoleculeUtil(object):
 
         for index, atom in enumerate(self.modeller.topology.atoms()):
             if atom.name in ('CA', 'C', 'N'):
-                print(f'adding restraint to atom {index}, {atom}')
                 coord = positions[index]
                 force.addParticle(index, coord.value_in_unit(u.nanometers))
         
@@ -73,6 +73,11 @@ class MoleculeUtil(object):
 
     def _remove_backbone_restraint(self):
         self.system.removeForce(self.restraint_force_id)
+    
+    def _fix_backbone(self):
+        for index, atom in enumerate(self.modeller.topology.atoms()):
+            if atom.name in ('CA', 'C', 'N'):
+                self.system.setParticleMass(index, 0)
 
     def seed_offsets(self):
         self.offsets = np.random.choice(
@@ -124,9 +129,11 @@ class MoleculeUtil(object):
                 cartesian['x'], cartesian['y'], cartesian['z'])]
         )
 
-        self._add_backbone_restraint()
+        # self._add_backbone_restraint()
+        # self._fix_backbone()
+
         self.modeller.addSolvent(self.forcefield, padding=1.0*u.nanometer)
-        self.simulation.minimizeEnergy(maxIterations=500)
+        self.simulation.minimizeEnergy(maxIterations=200)
         state = self.simulation.context.getState(
             getEnergy=True, getPositions=True)
         p_energy = state.getPotentialEnergy()
@@ -134,7 +141,9 @@ class MoleculeUtil(object):
 
         # Clean up - remove solvent and backbone restraint (for next iteration)
         self.modeller.deleteWater()
-        self._remove_backbone_restraint()
+
+        # self._remove_backbone_restraint()
+
         return p_energy, positions
 
     def _init_pdb_bonds(self):

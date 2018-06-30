@@ -17,17 +17,20 @@ except Exception as e:
 
 molecule = MoleculeUtil(AppSettings.local_pdb_path)
 
-for i in range(2):
+for i in range(40):
     job = requests.get(f'{AppSettings.host}/job_request')
     new_torsions = pickle.loads(job.content)
     molecule.set_torsions(new_torsions)
 
     p_energy, positions = molecule.run_simulation()
-    print(p_energy)
     molecule.set_cc_positions(positions)
     torsions = molecule.get_torsions()
+    print(torsions)
     angle_diff = torsions.flatten() - molecule.starting_torsions.flatten()
-    print(angle_diff)
     angle_dist = np.sqrt(np.dot(angle_diff, angle_diff))
+    
+    # TODO - calculate RMSD and send back to broker
+    
+    print((angle_dist, p_energy))
     requests.post(f'{AppSettings.host}/complete_job',
-                  data=pickle.dumps((p_energy, angle_dist)))
+                  data=pickle.dumps((angle_dist, p_energy)))
