@@ -1,7 +1,7 @@
 from simtk.openmm.app import PDBFile, Simulation, ForceField, Modeller, PME, HBonds
-from simtk.openmm import LangevinIntegrator
+from simtk.openmm import LangevinIntegrator, CustomExternalForce
 from simtk.openmm.vec3 import Vec3
-from simtk.unit import kelvin, nanometer, picosecond, picoseconds
+import simtk.unit as u
 import numpy as np
 import pandas as pd
 import chemcoord as cc
@@ -28,11 +28,11 @@ class MoleculeUtil(object):
         self.system = self.forcefield.createSystem(
             self.modeller.topology,
             nonbondedMethod=PME,
-            nonbondedCutoff=1*nanometer,
+            nonbondedCutoff=1*u.nanometer,
             constraints=HBonds
         )
         self.integrator = LangevinIntegrator(
-            300*kelvin, 1/picosecond, 0.002*picoseconds)
+            300*u.kelvin, 1/u.picosecond, 0.002*u.picoseconds)
         self.simulation = Simulation(
             self.modeller.topology, self.system, self.integrator)
         self.pdb_positions = self.modeller.getPositions()
@@ -52,6 +52,27 @@ class MoleculeUtil(object):
             self.zmat.loc[self.torsion_indices[:, 0], 'dihedral'],
             self.zmat.loc[self.torsion_indices[:, 1], 'dihedral']]).T
         self.seed_offsets()
+
+    def _add_backbone_restraint(self):
+        # https://github.com/ParmEd/ParmEd/wiki/OpenMM-Tricks-and-Recipes#positional-restraints
+        positions = self.modeller.getPositions()
+        print('\n\nadd_backbone restraint positions\n\n')
+        force = CustomExternalForce('k*((x-x0)^2+(y-y0)^2+(z-z0)^2)')
+        force.addGlobalParameter('k', 5.0*u.kilocalories_per_mole/u.angstroms**2)
+        force.addPerParticleParameter('x0')
+        force.addPerParticleParameter('y0')
+        force.addPerParticleParameter('z0')
+
+        for index, atom in enumerate(self.modeller.topology.atoms()):
+            if atom.name in ('CA', 'C', 'N'):
+                print(f'adding restraint to atom {index}, {atom}')
+                coord = positions[index]
+                force.addParticle(index, coord.value_in_unit(u.nanometers))
+        
+        self.restraint_force_id = self.system.addForce(force)
+
+    def _remove_backbone_restraint(self):
+        self.system.removeForce(self.restraint_force_id)
 
     def seed_offsets(self):
         self.offsets = np.random.choice(
@@ -76,7 +97,6 @@ class MoleculeUtil(object):
         Args:
             scale_factor: the relative scale of the offset relative to
                           self.offset_size
-
         Returns:
             The new torsion angles
         """
@@ -103,14 +123,18 @@ class MoleculeUtil(object):
             [Vec3(x, y, z) for x, y, z in zip(
                 cartesian['x'], cartesian['y'], cartesian['z'])]
         )
-        self.modeller.addSolvent(self.forcefield, padding=1.0*nanometer)
-        self.simulation.minimizeEnergy(maxIterations=20)
+
+        self._add_backbone_restraint()
+        self.modeller.addSolvent(self.forcefield, padding=1.0*u.nanometer)
+        self.simulation.minimizeEnergy(maxIterations=500)
         state = self.simulation.context.getState(
             getEnergy=True, getPositions=True)
-        self.modeller.deleteWater()
-
         p_energy = state.getPotentialEnergy()
         positions = state.getPositions(asNumpy=True)
+
+        # Clean up - remove solvent and backbone restraint (for next iteration)
+        self.modeller.deleteWater()
+        self._remove_backbone_restraint()
         return p_energy, positions
 
     def _init_pdb_bonds(self):
@@ -139,12 +163,10 @@ class MoleculeUtil(object):
         cc_positions = np.zeros((3, self.modeller.topology.getNumAtoms()))
         atom_names = []
         for index, atom in enumerate(self.modeller.topology.atoms()):
-            pos = positions[index] / nanometer
+            pos = positions[index] / u.nanometer
             atom_names.append(atom.name)
             cc_positions[:, index] = pos
 
-        # print(cc_positions)
-        # print(atom_names)
         cc_df = pd.DataFrame({
             'atom': atom_names,
             'x': cc_positions[0, :],
